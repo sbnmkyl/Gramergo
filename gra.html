@@ -1,0 +1,2742 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRAMERGO - Akıllı Gramer Öğrenme Oyunu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Poppins:wght@300;400;500;600;700;800&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .brand-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .quiz-font {
+            font-family: 'Quicksand', sans-serif;
+        }
+        
+        /* 3D Flip Card Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .card-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Shake Animation for Wrong Matches */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake-effect {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Success Pop Animation */
+        @keyframes pop-success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); filter: brightness(1.2); }
+            100% { transform: scale(1); }
+        }
+        .pop-effect {
+            animation: pop-success 0.5s ease-in-out;
+        }
+
+        /* Soft Hover bounce */
+        .bounce-hover {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bounce-hover:hover {
+            transform: translateY(-6px) scale(1.03);
+        }
+
+        /* Animated playful gradient background */
+        body {
+            background: linear-gradient(-45deg, #eef2ff, #fdf2f8, #ecfeff, #fef9c3);
+            background-size: 400% 400%;
+            animation: bgFloat 18s ease infinite;
+        }
+        @keyframes bgFloat {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Confetti canvas overlay */
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 60;
+        }
+
+        /* Level up burst */
+        @keyframes levelUpPop {
+            0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+            55% { transform: scale(1.15) rotate(4deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .levelup-pop { animation: levelUpPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* Floating "+XP" reward bubble */
+        @keyframes floatXP {
+            0% { transform: translateY(0) scale(0.8); opacity: 0; }
+            20% { transform: translateY(-10px) scale(1.1); opacity: 1; }
+            100% { transform: translateY(-90px) scale(1); opacity: 0; }
+        }
+        .float-xp {
+            position: fixed;
+            left: 50%;
+            top: 38%;
+            transform: translateX(-50%);
+            z-index: 70;
+            pointer-events: none;
+            font-weight: 900;
+            animation: floatXP 1.3s ease-out forwards;
+        }
+
+        /* Toast (badge unlocked) */
+        @keyframes toastIn {
+            0% { transform: translateX(120%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(120%); opacity: 0; }
+        }
+        .toast-in { animation: toastIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .toast-out { animation: toastOut 0.4s ease-in forwards; }
+
+        /* Mascot reaction bob */
+        @keyframes mascotBob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-8px) rotate(-6deg); }
+            75% { transform: translateY(-8px) rotate(6deg); }
+        }
+        .mascot-bob { animation: mascotBob 0.7s ease-in-out; }
+
+        /* XP progress bar shimmer */
+        .xp-bar-fill {
+            transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            background-image: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b);
+            background-size: 200% 100%;
+            animation: xpShimmer 3s linear infinite;
+        }
+        @keyframes xpShimmer {
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Badge pop on render */
+        @keyframes badgePop {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .badge-pop { animation: badgePop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+
+        /* Speed round quick flash feedback */
+        @keyframes flashCorrect {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+            30% { box-shadow: 0 0 0 6px rgba(16,185,129,0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+        @keyframes flashWrong {
+            0% { box-shadow: 0 0 0 0 rgba(244,63,94,0); }
+            30% { box-shadow: 0 0 0 6px rgba(244,63,94,0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(244,63,94,0); }
+        }
+        .flash-correct { animation: flashCorrect 0.45s ease-out; }
+        .flash-wrong { animation: flashWrong 0.45s ease-out; }
+
+        /* Speed timer pulse when low */
+        @keyframes timerLow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+        .timer-low { animation: timerLow 0.6s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex flex-col min-h-screen">
+
+    <!-- TOP HEADER -->
+    <header class="bg-gradient-to-r from-indigo-600 via-pink-500 to-amber-500 text-white shadow-xl px-4 py-4 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <!-- Logo & Mascot -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goToDashboard()">
+                <div class="bg-white text-indigo-600 p-2.5 rounded-2xl shadow-lg flex items-center justify-center transition hover:rotate-12">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-font text-3xl font-black tracking-wider drop-shadow-md">GRAMERGO</h1>
+                    <p class="text-[10px] text-pink-100 tracking-widest font-bold uppercase">AKILLI GRAMER & KELİME MACERASI</p>
+                </div>
+            </div>
+
+            <!-- Active User Info & Controls -->
+            <div id="header-controls" class="hidden flex items-center space-x-3">
+                <!-- User Profile Summary -->
+                <div class="bg-white/10 px-3.5 py-2 rounded-2xl border border-white/20 flex items-center space-x-2 shadow-inner">
+                    <span id="user-display-avatar" class="text-lg">👨‍🚀</span>
+                    <span class="text-xs">
+                        <strong id="user-display-name" class="text-white">Giriş Yapılmadı</strong>
+                    </span>
+                    <span id="user-display-grade" class="bg-white/20 text-white text-[9px] font-black px-2 py-0.5 rounded">8. Sınıf</span>
+                </div>
+
+                <div class="flex space-x-1 bg-black/20 p-1.5 rounded-2xl">
+                    <button id="nav-student" onclick="goToDashboard()" class="px-4 py-2 rounded-xl text-xs font-black transition bg-white text-indigo-700 shadow-md">
+                        Maceram
+                    </button>
+                    <button id="nav-teacher" onclick="switchView('teacher-dashboard')" class="px-4 py-2 rounded-xl text-xs font-black transition text-white hover:bg-white/10">
+                        Öğretmen Analiz
+                    </button>
+                </div>
+
+                <!-- Çıkış Butonu -->
+                <button onclick="logout()" class="bg-red-500/20 hover:bg-red-500 text-white text-xs font-bold p-2.5 rounded-xl transition" title="Çıkış Yap">
+                    🚪
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
+
+        <!-- ================= NEW UNIQUE LOGIN PORTAL ================= -->
+        <section id="login-portal" class="max-w-2xl mx-auto my-6 space-y-8 animate-fade-in">
+            <!-- Title -->
+            <div class="text-center space-y-2">
+                <h2 class="text-4xl font-black text-indigo-950 brand-font tracking-wide">Uzay Dil Okulu Girişi</h2>
+                <p class="text-slate-500 text-sm">Astronot kaskını tak ve kendi kadet kimliğini tasarlayarak sıfırdan dil yolculuğuna başla!</p>
+            </div>
+
+            <!-- Giriş Tipi Seçici -->
+            <div class="flex bg-slate-200/60 p-2 rounded-3xl max-w-xs mx-auto">
+                <button onclick="setLoginType('student')" id="login-tab-student" class="flex-1 py-3 rounded-2xl text-xs font-black transition bg-white text-indigo-900 shadow-md">
+                    Kadet (Öğrenci)
+                </button>
+                <button onclick="setLoginType('teacher')" id="login-tab-teacher" class="flex-1 py-3 rounded-2xl text-xs font-black transition text-slate-600 hover:text-slate-800">
+                    Öğretmen / Kaptan
+                </button>
+            </div>
+
+            <!-- STUDENT UNIQUE REGISTER & CHOOSE SCREEN -->
+            <div id="student-login-form" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                
+                <!-- Left Card: Dynamic Avatar Creator -->
+                <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-6">
+                    <div class="border-b pb-4">
+                        <span class="text-xs font-black text-indigo-600 uppercase tracking-widest">KOD ADINI SEÇ</span>
+                        <h3 class="text-xl font-bold text-slate-800">Yeni Kadet Kartı Oluştur</h3>
+                        <p class="text-xs text-rose-500 font-bold mt-1">⚠️ Yeni kayıtlar kesinlikle 0 puan ile tertemiz başlar!</p>
+                    </div>
+
+                    <!-- Name input -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold text-slate-500 uppercase">Kadet Adı (Gerçek Adın veya Takma Adın)</label>
+                        <input type="text" id="reg-name" placeholder="Örn: Alperen Şahin" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-indigo-500 transition shadow-inner">
+                    </div>
+
+                    <!-- Avatar Selection -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold text-slate-500 uppercase">Karakter Avatarını Seç</label>
+                        <div class="grid grid-cols-5 gap-3" id="avatar-grid-select">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Grade Selection Card Group -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold text-slate-500 uppercase">Sınıf Seviyeniz</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="selectGradeToReg('5')" id="reg-grade-5" class="py-3 px-1 rounded-2xl text-xs font-black border-2 border-slate-100 bg-slate-50 hover:bg-slate-100 text-slate-600 transition">5. Sınıf</button>
+                            <button onclick="selectGradeToReg('6')" id="reg-grade-6" class="py-3 px-1 rounded-2xl text-xs font-black border-2 border-slate-100 bg-slate-50 hover:bg-slate-100 text-slate-600 transition">6. Sınıf</button>
+                            <button onclick="selectGradeToReg('7')" id="reg-grade-7" class="py-3 px-1 rounded-2xl text-xs font-black border-2 border-slate-100 bg-slate-50 hover:bg-slate-100 text-slate-600 transition">7. Sınıf</button>
+                            <button onclick="selectGradeToReg('8')" id="reg-grade-8" class="py-3 px-1 rounded-2xl text-xs font-black border-2 border-indigo-500 bg-indigo-50 text-indigo-700 transition">8. Sınıf</button>
+                        </div>
+                    </div>
+
+                    <button onclick="createNewStudentProfile()" class="w-full bg-gradient-to-r from-indigo-600 via-pink-500 to-amber-500 text-white font-black py-4 rounded-2xl shadow-lg transition-all bounce-hover text-sm">
+                        Kadet Kartımı Onayla ve Uzaya Çık 🛸
+                    </button>
+                </div>
+
+                <!-- Right Card: Quick Login via Character Cards -->
+                <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-6">
+                    <div class="border-b pb-4">
+                        <span class="text-xs font-black text-purple-600 uppercase tracking-widest">SİMÜLASYON KADETLERİ (DEMO)</span>
+                        <h3 class="text-xl font-bold text-slate-800">Hazır Karakterlerden Seç</h3>
+                        <p class="text-[11px] text-slate-400">Demo profiller öğretmen paneli analizi için hazır veriler barındırır.</p>
+                    </div>
+
+                    <!-- Class grade filter for quick list -->
+                    <div class="flex gap-2">
+                        <button onclick="filterQuickListGrade('5')" id="ql-g-5" class="flex-1 py-1 px-1 text-[10px] font-black rounded-lg bg-slate-100 text-slate-600">5. Sınıf</button>
+                        <button onclick="filterQuickListGrade('6')" id="ql-g-6" class="flex-1 py-1 px-1 text-[10px] font-black rounded-lg bg-slate-100 text-slate-600">6. Sınıf</button>
+                        <button onclick="filterQuickListGrade('7')" id="ql-g-7" class="flex-1 py-1 px-1 text-[10px] font-black rounded-lg bg-slate-100 text-slate-600">7. Sınıf</button>
+                        <button onclick="filterQuickListGrade('8')" id="ql-g-8" class="flex-1 py-1 px-1 text-[10px] font-black rounded-lg bg-purple-600 text-white shadow">8. Sınıf</button>
+                    </div>
+
+                    <!-- Scrollable list of students as game cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1" id="quick-students-card-grid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TEACHER LOGIN FORM -->
+            <div id="teacher-login-form" class="max-w-md mx-auto bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-6 hidden">
+                <div class="text-left space-y-1">
+                    <label class="text-xs font-extrabold text-slate-500 uppercase tracking-wide">Öğretmen Giriş Kodu</label>
+                    <input type="password" id="teacher-passcode" placeholder="Örn: MEB2026" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-indigo-500 shadow-inner">
+                </div>
+
+                <button onclick="loginAsTeacher()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-4 rounded-2xl shadow-lg transition-all bounce-hover">
+                    Kaptan Köprüsüne Giriş Yap 🎓
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= STUDENT DASHBOARD ================= -->
+        <section id="student-dashboard" class="hidden space-y-8 animate-fade-in">
+            
+            <!-- Welcome Progress Banner -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-lg border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6">
+                <div class="space-y-3 text-center lg:text-left">
+                    <div class="inline-block bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-wide shadow-md">
+                        Aktif Profil: <span id="current-grade-badge">8. Sınıf LGS Modu</span>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-800 leading-tight">Tekrar Hoş Geldin, <span id="welcome-student-name" class="text-indigo-600">Süper Dilci!</span> <span id="welcome-avatar-holder" class="inline-block">👨‍🚀</span></h2>
+                    <p class="text-slate-500 text-sm max-w-md">Kazanımlarına özel eğlenceli dil görevleri, 3D kelime kartı eşleştirme portalı ve aralıklı tekrar mekanizması seni bekliyor.</p>
+
+                    <!-- Level & XP Progress -->
+                    <div class="max-w-md pt-1">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="flex items-center gap-1.5 text-xs font-black text-indigo-700">
+                                <span class="bg-gradient-to-r from-indigo-600 to-pink-500 text-white text-[10px] px-2 py-0.5 rounded-lg shadow">LV <span id="header-level">1</span></span>
+                                <span id="header-level-title" class="text-slate-500 font-bold">Çaylak Dilci</span>
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-400"><span id="header-xp">0</span> / <span id="header-xp-next">100</span> XP</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden shadow-inner">
+                            <div id="header-xp-bar" class="xp-bar-fill h-full rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stars & Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-2 pt-3 justify-center lg:justify-start">
+                        <span class="bg-yellow-100 text-yellow-800 font-black text-xs px-3 py-2 rounded-xl shadow-sm">⭐ <span id="header-stars">0</span> Yıldız</span>
+                        <button onclick="openAvatarWorkshop()" class="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs px-4 py-2 rounded-xl shadow-md hover:scale-105 transition">🎨 Avatar Atölyesi</button>
+                        <button onclick="startSpeedRound()" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-xs px-4 py-2 rounded-xl shadow-md hover:scale-105 transition">⏱️ Hız Turu</button>
+                    </div>
+                </div>
+
+                <!-- Live stats display -->
+                <div class="grid grid-cols-3 gap-4 w-full lg:w-auto">
+                    <!-- Streak -->
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-3xl p-4 text-center border border-amber-200 shadow-sm flex flex-col items-center justify-center w-28 md:w-32">
+                        <span class="text-3xl">🔥</span>
+                        <span class="text-[10px] text-amber-800 font-bold uppercase tracking-wider">Günlük Seri</span>
+                        <span id="header-streak" class="text-xl font-black text-amber-700 brand-font">0 Gün</span>
+                    </div>
+
+                    <!-- Mastery -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-4 text-center border border-purple-200 shadow-sm flex flex-col items-center justify-center w-28 md:w-32">
+                        <span class="text-3xl">🏆</span>
+                        <span class="text-[10px] text-purple-800 font-bold uppercase tracking-wider">Ustalık Skoru</span>
+                        <span id="header-mastery" class="text-xl font-black text-purple-700 brand-font">0</span>
+                    </div>
+
+                    <!-- Rank -->
+                    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl p-4 text-center border border-emerald-200 shadow-sm flex flex-col items-center justify-center w-28 md:w-32">
+                        <span class="text-3xl">⭐</span>
+                        <span class="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Liderlik</span>
+                        <span id="header-rank" class="text-xl font-black text-emerald-700 brand-font">Sıra #--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Grid Map (Based on MEB Units) -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 flex items-center space-x-2">
+                            <span>🎯</span>
+                            <span>Müfredat Görev Haritan (Ünite Başına En Az 50 Soru!)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Milli Eğitim Bakanlığı müfredatına göre dinamik olarak açılan ve zenginleştirilmiş seviye haritanız.</p>
+                    </div>
+                    <span id="unit-count-badge" class="text-xs bg-indigo-100 text-indigo-700 font-black px-3 py-1.5 rounded-xl">4 Ünite Aktif</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-missions-grid">
+                    <!-- Dynamic Mission Cards render here -->
+                </div>
+            </div>
+
+            <!-- Badges / Achievements -->
+            <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center space-x-2">
+                        <span>🏅</span>
+                        <span>Rozet Koleksiyonun</span>
+                    </h3>
+                    <span id="badge-count-label" class="text-xs bg-amber-100 text-amber-700 font-black px-3 py-1.5 rounded-xl">0 / 0 Rozet</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="badges-grid">
+                    <!-- Badges render here -->
+                </div>
+            </div>
+
+            <!-- Word Match Highlight Banner -->
+            <div class="bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 rounded-3xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 bounce-hover">
+                <div class="space-y-2">
+                    <span class="bg-white/25 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">3D SESLİ ARCADE</span>
+                    <h4 class="text-2xl font-black leading-tight">Yenilenen Vocabulary Matcher (Eşleştirme Oyunu)</h4>
+                    <p class="text-pink-100 text-xs max-w-xl">500+ MEB kelime kartı, tatlı ses efektleri ve pürüzsüz flip animasyonlarıyla kelimeleri gizli yerlerinden ortaya çıkar!</p>
+                </div>
+                <button onclick="startWordMatcher()" class="bg-white text-rose-600 hover:bg-rose-550 font-black text-xs py-3.5 px-6 rounded-2xl shadow-md transition whitespace-nowrap">
+                    Mücadeleyi Başlat! ⚡
+                </button>
+            </div>
+
+            <!-- Spaced Repetition (Aralıklı Tekrar) Bölümü -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-orange-500 text-white p-1.5 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        <h4 class="font-extrabold text-slate-800">Unutma Eğrisi Koruyucu (Spaced Repetition)</h4>
+                    </div>
+                    <p class="text-slate-600 text-xs max-w-2xl leading-relaxed">
+                        Yapay zeka motorumuz son yaptığın çalışmaları analiz etti! En çok zorlandığın <span class="font-bold text-orange-600" id="repetition-subject-highlight">"Zaman Edatları & Cümle Kurma"</span> konularını unutma riskin yüksek. Şimdi hızlı tekrar oturumunu başlat!
+                    </p>
+                </div>
+                <button onclick="startMission('repetition')" class="bg-orange-600 hover:bg-orange-700 text-white font-black text-xs py-3.5 px-6 rounded-2xl shadow-md transition whitespace-nowrap">
+                    Hafızayı Güçlendir 🧠
+                </button>
+            </div>
+
+        </section>
+
+        <!-- ================= MISSION GAME PLAY SCREEN ================= -->
+        <section id="game-screen" class="hidden max-w-3xl mx-auto space-y-6 animate-fade-in">
+            
+            <!-- Game Header -->
+            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <button onclick="quitGame()" class="text-slate-500 hover:text-slate-800 flex items-center space-x-1 text-xs font-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span>Kayıp Git</span>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <span id="speed-timer" class="hidden bg-rose-100 text-rose-700 text-xs font-black px-3.5 py-1.5 rounded-xl">⏱️ 60 sn</span>
+                    <span id="game-title-badge" class="bg-indigo-100 text-indigo-700 text-xs font-black px-3.5 py-1.5 rounded-xl uppercase">Kategori</span>
+                    <span id="game-step" class="text-slate-500 text-xs font-bold">Soru 1/10</span>
+                </div>
+            </div>
+
+            <!-- Core Game Card -->
+            <div id="core-game-card" class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-100 relative overflow-hidden">
+                
+                <!-- Game Type 1: Sentence Builder (Word Order) -->
+                <div id="game-word-order" class="space-y-6 hidden">
+                    <div class="text-center space-y-2">
+                        <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">Cümle Sıralama</span>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-800">Kelimeleri en doğru sırayla dizerek anlamlı bir cümle kurun:</h3>
+                    </div>
+
+                    <!-- Target Sentence Area -->
+                    <div class="min-h-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 p-4 flex flex-wrap gap-2 items-center justify-center" id="sentence-target">
+                        <!-- Words will go here -->
+                    </div>
+
+                    <!-- Unsorted Source Words -->
+                    <div class="flex flex-wrap gap-2 justify-center py-4" id="sentence-source">
+                        <!-- Shuffled source words -->
+                    </div>
+                </div>
+
+                <!-- Game Type 2: Gap Filler (Preposition / Article / Tenses) -->
+                <div id="game-gap-fill" class="space-y-6 hidden">
+                    <div class="text-center space-y-2">
+                        <span class="bg-purple-100 text-purple-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">Boşluk Doldurma</span>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-800">Cümledeki boşluğa MEB kazanımına uygun seçeneği yerleştirin:</h3>
+                    </div>
+
+                    <!-- Question text with blank highlight -->
+                    <div class="bg-slate-50 p-6 md:p-8 rounded-2xl border border-slate-200 text-center text-lg md:text-2xl font-semibold text-slate-700 my-4 quiz-font">
+                        <span id="gap-part1"></span>
+                        <span class="underline text-indigo-600 font-black px-4 py-1.5 bg-indigo-50 rounded-xl border-2 border-indigo-200 mx-1 inline-block transition-all" id="gap-field">? ? ?</span>
+                        <span id="gap-part2"></span>
+                    </div>
+
+                    <!-- Option Choices -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="gap-options">
+                        <!-- Dynamic choices -->
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="mt-8 flex justify-between items-center border-t pt-6">
+                    <button id="btn-use-hint" onclick="useHint()" class="text-amber-600 hover:text-amber-700 font-extrabold text-xs flex items-center space-x-1.5 px-3.5 py-2.5 bg-amber-50 rounded-xl transition">
+                        <span>💡 İpucu Al (-5 Ustalık)</span>
+                    </button>
+                    <button id="btn-check" onclick="checkAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-8 py-3.5 rounded-2xl shadow-lg transition disabled:opacity-50">
+                        Cevabı Gönder ✨
+                    </button>
+                </div>
+            </div>
+
+            <!-- SMART ERROR TAGGING & FEEDBACK PANEL -->
+            <div id="feedback-modal" class="hidden transform transition-all duration-300">
+                <div id="feedback-bg" class="rounded-3xl p-6 border flex flex-col space-y-4 shadow-md">
+                    <div class="flex items-center space-x-4">
+                        <div id="feedback-icon-holder" class="p-3 rounded-full text-white">
+                            <!-- SVG will render -->
+                        </div>
+                        <div>
+                            <h4 id="feedback-status" class="font-black text-xl">Sonuç Durumu</h4>
+                            <p id="feedback-error-tag" class="text-xs uppercase font-extrabold tracking-wider text-slate-500"></p>
+                        </div>
+                    </div>
+                    
+                    <p id="feedback-explanation" class="text-sm leading-relaxed text-slate-700 border-l-4 border-indigo-500 pl-3 italic"></p>
+
+                    <div id="spaced-rep-box" class="bg-white/40 p-3.5 rounded-2xl border border-white/20 text-xs flex items-center space-x-2">
+                        <span>🧠</span>
+                        <span id="spaced-rep-text">Bu kural hatası akıllı analiz motoruna raporlandı.</span>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button id="btn-feedback-next" onclick="nextQuestion()" class="bg-white text-slate-800 font-black text-xs py-3 px-6 rounded-xl shadow-sm hover:bg-slate-100 transition">
+                            Sonraki Soruya Geç →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= NEW 3D WORD MATCHER QUEST SCREEN ================= -->
+        <section id="word-matcher-screen" class="hidden max-w-4xl mx-auto space-y-6 animate-fade-in">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h3 class="text-2xl font-black text-slate-800 flex items-center space-x-2 brand-font">
+                        <span>🎴</span>
+                        <span>Vocabulary Matcher (Kelime Eşleştirme)</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">İngilizce kelimeleri doğru Türkçe anlamlarıyla eşleştirin. MEB kelime havuzundan seçilmiştir!</p>
+                </div>
+                <div class="flex space-x-2">
+                    <span class="bg-rose-100 text-rose-700 text-xs font-black px-4 py-2 rounded-xl" id="matcher-score">Skor: 0</span>
+                    <button onclick="quitGame()" class="bg-slate-100 text-slate-700 text-xs font-black px-4 py-2 rounded-xl hover:bg-slate-200 transition">Kapat</button>
+                </div>
+            </div>
+
+            <!-- Game board grid using 3D perspective -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 perspective-1000" id="matcher-grid">
+                <!-- 3D flip card items will load here dynamically -->
+            </div>
+            
+            <div class="text-center py-4">
+                <button onclick="resetMatcherRound()" class="bg-gradient-to-r from-indigo-600 to-pink-500 hover:shadow-lg text-white font-black text-xs py-4 px-8 rounded-2xl transition-all bounce-hover">
+                    Kartları Yenile & Karıştır 🔄
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= TEACHER DASHBOARD ================= -->
+        <section id="teacher-dashboard" class="hidden space-y-8 animate-fade-in">
+            
+            <!-- Dashboard Title and Info -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 brand-font">Müfredat Bazlı Öğretmen Analiz Paneli</h2>
+                        <p class="text-slate-500 text-sm">Sınıflarınızın MEB 5, 6, 7 ve 8. sınıf üniteleri genelindeki başarı ve hata oranlarını canlı izleyin.</p>
+                    </div>
+                    <!-- Sınıf filtreleyici -->
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="filterTeacherGrade('5')" id="btn-filter-5" class="bg-blue-100 text-blue-700 text-xs font-black px-3.5 py-1.5 rounded-xl hover:bg-blue-200 transition">5. Sınıf</button>
+                        <button onclick="filterTeacherGrade('6')" id="btn-filter-6" class="bg-teal-100 text-teal-700 text-xs font-black px-3.5 py-1.5 rounded-xl hover:bg-teal-200 transition">6. Sınıf</button>
+                        <button onclick="filterTeacherGrade('7')" id="btn-filter-7" class="bg-amber-100 text-amber-700 text-xs font-black px-3.5 py-1.5 rounded-xl hover:bg-amber-200 transition">7. Sınıf</button>
+                        <button onclick="filterTeacherGrade('8')" id="btn-filter-8" class="bg-purple-600 text-white text-xs font-black px-3.5 py-1.5 rounded-xl transition shadow-md">8. Sınıf LGS</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heatmap Container -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-indigo-600"></span>
+                        <span id="teacher-heatmap-title">Başarı Isı Haritası (Seçili Sınıf)</span>
+                    </h3>
+                    <div class="flex space-x-3 text-[10px] font-extrabold text-slate-500">
+                        <div class="flex items-center space-x-1">
+                            <div class="w-3 h-3 bg-rose-500 rounded"></div>
+                            <span>Kritik (%0-50)</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-3 h-3 bg-amber-400 rounded"></div>
+                            <span>Orta Seviye (%51-75)</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div class="w-3 h-3 bg-emerald-500 rounded"></div>
+                            <span>Ustalık (%76-100)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responsive Grid / Heatmap Matrix -->
+                <div class="overflow-x-auto no-scrollbar border border-slate-100 rounded-2xl">
+                    <table class="min-w-full divide-y divide-slate-100 text-sm">
+                        <thead id="teacher-table-head">
+                            <!-- Table columns rendered dynamically -->
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="teacher-heatmap-body">
+                            <!-- Dynamic Heatmap rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Error Analytics & Distribution -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Common Error Types Graph (CSS Based) -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+                    <h3 class="font-black text-slate-800 text-base">Hata Etiketleri ve Yanılgı Oranları</h3>
+                    <p class="text-xs text-slate-500">Öğrencilerin cevaplarından çıkartılan hata etiketleri:</p>
+                    
+                    <div class="space-y-4 pt-2" id="error-bar-charts">
+                        <!-- Rendered dynamically depending on the selected Grade Level -->
+                    </div>
+                </div>
+
+                <!-- AI Recommendations & Lesson Planner -->
+                <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-3xl p-6 border border-indigo-100 space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">🔮</span>
+                        <h3 class="font-black text-indigo-950 text-base">Yapay Zeka Destekli MEB Ders Planı Önerileri</h3>
+                    </div>
+                    <p class="text-xs text-indigo-900/80">Güncel kazanım verilerine göre sınıfa özel otomatik pedagojik tavsiyeler:</p>
+
+                    <div class="space-y-3 pt-2" id="ai-recommends-box">
+                        <!-- Dynamically populated recommendations -->
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-8 px-4 mt-12">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400 text-center md:text-left">
+            <div>
+                <p class="font-black text-slate-500 text-sm brand-font">© 2026 GRAMERGO Projesi</p>
+                <p class="mt-1">MEB 5, 6, 7 ve 8. Sınıf Kazanımlarına Uygun Oyunlaştırılmış Akıllı Dil Öğrenme Platformu</p>
+            </div>
+            <div class="flex space-x-4">
+                <a href="#" class="hover:text-indigo-600 transition font-bold">Kullanım Koşulları</a>
+                <a href="#" class="hover:text-indigo-600 transition font-bold">Kişisel Veri Güvenliği (Kod Sistemi)</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Confetti overlay -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- ================= JAVASCRIPT GAME LOGIC ================= -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'select') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'complete') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(554, audioCtx.currentTime + 0.15);
+                    osc.frequency.setValueAtTime(660, audioCtx.currentTime + 0.3);
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.45);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.7);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.7);
+                }
+            } catch (e) {
+                console.log("Audio API not allowed by user interaction yet.");
+            }
+        }
+
+        /* ============================================================
+           CONFETTI ENGINE (vanilla, no dependencies)
+           ============================================================ */
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
+        let confettiParticles = [];
+        let confettiRAF = null;
+
+        function sizeConfettiCanvas() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', sizeConfettiCanvas);
+        sizeConfettiCanvas();
+
+        function launchConfetti(amount = 120) {
+            const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#f43f5e'];
+            for (let i = 0; i < amount; i++) {
+                confettiParticles.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: -20 - Math.random() * confettiCanvas.height * 0.3,
+                    w: 6 + Math.random() * 8,
+                    h: 8 + Math.random() * 10,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: 2 + Math.random() * 4,
+                    rot: Math.random() * Math.PI,
+                    vr: (Math.random() - 0.5) * 0.3,
+                    life: 1
+                });
+            }
+            if (!confettiRAF) animateConfetti();
+        }
+
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            confettiParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.04;
+                p.rot += p.vr;
+                if (p.y > confettiCanvas.height * 0.78) p.life -= 0.02;
+                confettiCtx.save();
+                confettiCtx.globalAlpha = Math.max(0, p.life);
+                confettiCtx.translate(p.x, p.y);
+                confettiCtx.rotate(p.rot);
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                confettiCtx.restore();
+            });
+            confettiParticles = confettiParticles.filter(p => p.life > 0 && p.y < confettiCanvas.height + 40);
+            if (confettiParticles.length > 0) {
+                confettiRAF = requestAnimationFrame(animateConfetti);
+            } else {
+                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                confettiRAF = null;
+            }
+        }
+
+        /* ============================================================
+           XP & LEVEL SYSTEM
+           ============================================================ */
+        const LEVEL_TITLES = [
+            "Çaylak Dilci", "Hevesli Kâşif", "Kelime Avcısı", "Gramer Çırağı",
+            "Cümle Mimarı", "Dil Ustası", "Söz Dehası", "Efsane Dilci"
+        ];
+
+        function xpForLevel(level) { return level * 100; } // XP needed to advance from `level` to next
+
+        function getLevelInfo(xp) {
+            xp = xp || 0;
+            let level = 1;
+            let remaining = xp;
+            while (remaining >= xpForLevel(level)) {
+                remaining -= xpForLevel(level);
+                level++;
+            }
+            const need = xpForLevel(level);
+            return {
+                level,
+                title: LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)],
+                intoLevel: remaining,
+                need,
+                percent: Math.round((remaining / need) * 100)
+            };
+        }
+
+        function updatePlayerHud() {
+            if (!currentUser || isTeacherMode) return;
+            const info = getLevelInfo(currentUser.xp);
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            set('header-level', info.level);
+            set('header-level-title', info.title);
+            set('header-xp', info.intoLevel);
+            set('header-xp-next', info.need);
+            const bar = document.getElementById('header-xp-bar');
+            if (bar) bar.style.width = info.percent + '%';
+        }
+
+        function grantXP(amount, showBubble = true) {
+            if (!currentUser || isTeacherMode) return;
+            const before = getLevelInfo(currentUser.xp).level;
+            currentUser.xp = (currentUser.xp || 0) + amount;
+            const after = getLevelInfo(currentUser.xp).level;
+
+            if (showBubble && amount > 0) showXPBubble(amount);
+            updatePlayerHud();
+
+            if (after > before) {
+                showLevelUp(after);
+            }
+            saveState();
+        }
+
+        function showXPBubble(amount) {
+            const bubble = document.createElement('div');
+            bubble.className = 'float-xp text-2xl';
+            bubble.style.color = amount > 0 ? '#10b981' : '#f43f5e';
+            bubble.textContent = (amount > 0 ? '+' : '') + amount + ' XP';
+            document.body.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 1300);
+        }
+
+        function showLevelUp(level) {
+            playSound('complete');
+            launchConfetti(160);
+            grantStars(20);
+            const info = getLevelInfo(currentUser.xp);
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="levelup-pop bg-white rounded-3xl p-8 max-w-sm w-full text-center space-y-4 shadow-2xl border-4 border-indigo-200">
+                    <div class="text-6xl">🎉</div>
+                    <div class="inline-block bg-gradient-to-r from-indigo-600 to-pink-500 text-white text-sm font-black px-4 py-1.5 rounded-full shadow">SEVİYE ATLADIN!</div>
+                    <h3 class="text-3xl font-black text-slate-800 brand-font">Seviye ${level}</h3>
+                    <p class="text-indigo-600 font-bold">${info.title}</p>
+                    <p class="text-slate-500 text-xs">Yeni unvanını kazandın! Maceraya devam et ve daha güçlü ol.</p>
+                    <button onclick="this.closest('.fixed').remove()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-2xl shadow-lg transition">Süper! Devam Et</button>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        /* ============================================================
+           BADGES / ACHIEVEMENTS
+           ============================================================ */
+        const BADGE_DEFS = [
+            { id: 'first_step',  icon: '👣', name: 'İlk Adım',      desc: 'İlk görevini tamamla.' },
+            { id: 'flawless',    icon: '💎', name: 'Kusursuz',      desc: 'Bir görevi hiç hata yapmadan bitir.' },
+            { id: 'streak3',     icon: '🔥', name: 'Ateşli',        desc: '3 günlük seriye ulaş.' },
+            { id: 'streak7',     icon: '⚡', name: 'Yıldırım',      desc: '7 günlük seriye ulaş.' },
+            { id: 'word_master', icon: '📚', name: 'Kelime Ustası', desc: 'Eşleştirmede 100 skora ulaş.' },
+            { id: 'level5',      icon: '🚀', name: 'Roket',         desc: '5. seviyeye ulaş.' },
+            { id: 'master80',    icon: '🏆', name: 'Şampiyon',      desc: 'Ustalık skorun %80 olsun.' },
+            { id: 'combo5',      icon: '🎯', name: 'Seri Atış',     desc: 'Üst üste 5 doğru cevap ver.' },
+            { id: 'speedster',   icon: '⏱️', name: 'Hız Canavarı',  desc: 'Hız turunda 10+ doğru yap.' },
+            { id: 'avatar_unlocker', icon: '🎭', name: 'Avatar Açıcı', desc: 'Bir avatarın kilidini aç.' }
+        ];
+
+        function hasBadge(id) {
+            return currentUser && currentUser.badges && currentUser.badges.includes(id);
+        }
+
+        function awardBadge(id) {
+            if (!currentUser || isTeacherMode) return;
+            if (!currentUser.badges) currentUser.badges = [];
+            if (currentUser.badges.includes(id)) return;
+            currentUser.badges.push(id);
+            const def = BADGE_DEFS.find(b => b.id === id);
+            if (def) showToast(`🏅 Yeni Rozet: ${def.name}`, def.desc, def.icon);
+            launchConfetti(70);
+            renderBadges();
+            saveState();
+        }
+
+        function checkBadges(context = {}) {
+            if (!currentUser || isTeacherMode) return;
+            if (context.missionDone) awardBadge('first_step');
+            if (context.flawless) awardBadge('flawless');
+            if ((currentUser.streak || 0) >= 3) awardBadge('streak3');
+            if ((currentUser.streak || 0) >= 7) awardBadge('streak7');
+            if (matcherScore >= 100) awardBadge('word_master');
+            if (getLevelInfo(currentUser.xp).level >= 5) awardBadge('level5');
+            if (masteryScore >= 80) awardBadge('master80');
+            if ((currentUser.bestCombo || 0) >= 5) awardBadge('combo5');
+        }
+
+        function renderBadges() {
+            const grid = document.getElementById('badges-grid');
+            const label = document.getElementById('badge-count-label');
+            if (!grid) return;
+            const owned = (currentUser && currentUser.badges) ? currentUser.badges : [];
+            if (label) label.textContent = `${owned.length} / ${BADGE_DEFS.length} Rozet`;
+            grid.innerHTML = '';
+            BADGE_DEFS.forEach(def => {
+                const got = owned.includes(def.id);
+                const tile = document.createElement('div');
+                tile.className = `rounded-2xl p-3 text-center border-2 transition-all ${got ? 'bg-amber-50 border-amber-200 badge-pop' : 'bg-slate-50 border-slate-100 opacity-60'}`;
+                tile.title = def.desc;
+                tile.innerHTML = `
+                    <div class="text-3xl ${got ? '' : 'grayscale'}" style="${got ? '' : 'filter: grayscale(1)'}">${got ? def.icon : '🔒'}</div>
+                    <div class="text-[10px] font-black mt-1 ${got ? 'text-amber-700' : 'text-slate-400'}">${def.name}</div>`;
+                grid.appendChild(tile);
+            });
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATIONS
+           ============================================================ */
+        function showToast(title, desc, icon = '✨') {
+            let stack = document.getElementById('toast-stack');
+            if (!stack) {
+                stack = document.createElement('div');
+                stack.id = 'toast-stack';
+                stack.className = 'fixed top-24 right-4 z-[80] space-y-3 w-72';
+                document.body.appendChild(stack);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'toast-in bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 flex items-center gap-3';
+            toast.innerHTML = `
+                <span class="text-3xl">${icon}</span>
+                <div>
+                    <div class="font-black text-sm text-slate-800">${title}</div>
+                    <div class="text-[11px] text-slate-500 leading-tight">${desc}</div>
+                </div>`;
+            stack.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('toast-in');
+                toast.classList.add('toast-out');
+                setTimeout(() => toast.remove(), 400);
+            }, 3200);
+        }
+
+        /* ============================================================
+           MASCOT REACTION
+           ============================================================ */
+        function reactMascot() {
+            const holder = document.getElementById('welcome-avatar-holder');
+            if (!holder) return;
+            holder.classList.remove('mascot-bob');
+            void holder.offsetWidth;
+            holder.classList.add('mascot-bob');
+        }
+
+        /* ============================================================
+           TEXT-TO-SPEECH (Telaffuz)
+           ============================================================ */
+        function speak(text) {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'en-US';
+                u.rate = 0.9;
+                u.pitch = 1.05;
+                window.speechSynthesis.speak(u);
+            } catch (e) { /* TTS unavailable */ }
+        }
+
+        /* ============================================================
+           BAŞARI YILDIZI (Eğitimsel İlerleme Göstergesi)
+           ============================================================ */
+        function updateStarsUI() {
+            const el = document.getElementById('header-stars');
+            if (el && currentUser && !isTeacherMode) el.textContent = currentUser.stars || 0;
+        }
+
+        function grantStars(amount) {
+            if (!currentUser || isTeacherMode || amount <= 0) return;
+            currentUser.stars = (currentUser.stars || 0) + amount;
+            updateStarsUI();
+            saveState();
+        }
+
+        /* ============================================================
+           AVATAR ATÖLYESİ (Karakter Özelleştirme)
+           ============================================================ */
+        const AVATAR_LIBRARY = [
+            { emoji: '🐉', name: 'Ejderha',     requiredStars: 150 },
+            { emoji: '🥷', name: 'Ninja',       requiredStars: 180 },
+            { emoji: '👑', name: 'Kral',        requiredStars: 200 },
+            { emoji: '🦅', name: 'Kartal',      requiredStars: 100 },
+            { emoji: '🐯', name: 'Kaplan',      requiredStars: 120 },
+            { emoji: '🦉', name: 'Baykuş',      requiredStars: 90 },
+            { emoji: '🐺', name: 'Kurt',        requiredStars: 110 },
+            { emoji: '🦈', name: 'Köpekbalığı', requiredStars: 130 },
+            { emoji: '🦸', name: 'Süper Kahraman', requiredStars: 220 },
+            { emoji: '🧚', name: 'Peri',        requiredStars: 160 },
+            { emoji: '👻', name: 'Hayalet',     requiredStars: 80 },
+            { emoji: '🐲', name: 'Mini Ejder',  requiredStars: 140 }
+        ];
+
+        function isAvatarOwned(emoji) {
+            if (mascotAvatars.some(a => a.emoji === emoji)) return true;
+            return currentUser && currentUser.ownedAvatars && currentUser.ownedAvatars.includes(emoji);
+        }
+
+        function openAvatarWorkshop() {
+            if (!currentUser || isTeacherMode) return;
+            playSound('select');
+            const existing = document.getElementById('avatar-workshop-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'avatar-workshop-modal';
+            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in';
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-4">
+                    <div class="flex justify-between items-center sticky top-0 bg-white pb-2">
+                        <h3 class="text-2xl font-black text-slate-800 brand-font flex items-center gap-2">🎨 Avatar Atölyesi</h3>
+                        <div class="flex items-center gap-3">
+                            <span class="bg-yellow-100 text-yellow-800 font-black text-sm px-3 py-1.5 rounded-xl">⭐ <span id="workshop-star-total">${currentUser.stars || 0}</span></span>
+                            <button onclick="document.getElementById('avatar-workshop-modal').remove()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-black w-9 h-9 rounded-xl transition">✕</button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500">Görevleri tamamlayarak başarı yıldızı topla, yeni avatarların kilidini aç ve karakterini özelleştir.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="avatar-workshop-grid"></div>
+                </div>`;
+            document.body.appendChild(modal);
+            renderAvatarWorkshopGrid();
+        }
+
+        function renderAvatarWorkshopGrid() {
+            const grid = document.getElementById('avatar-workshop-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            const totalEl = document.getElementById('workshop-star-total');
+            if (totalEl) totalEl.textContent = currentUser.stars || 0;
+
+            AVATAR_LIBRARY.forEach(item => {
+                const owned = isAvatarOwned(item.emoji);
+                const equipped = currentUser.emoji === item.emoji;
+                const enoughStars = (currentUser.stars || 0) >= item.requiredStars;
+
+                const tile = document.createElement('div');
+                tile.className = `rounded-2xl p-3 text-center border-2 ${equipped ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-slate-50'} flex flex-col items-center gap-2`;
+
+                let actionBtn;
+                if (equipped) {
+                    actionBtn = `<span class="text-[10px] font-black text-indigo-600 py-1.5">✓ Kullanılıyor</span>`;
+                } else if (owned) {
+                    actionBtn = `<button onclick="equipAvatar('${item.emoji}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black py-1.5 rounded-lg transition">Kuşan</button>`;
+                } else if (enoughStars) {
+                    actionBtn = `<button onclick="unlockAvatar('${item.emoji}', ${item.requiredStars})" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black py-1.5 rounded-lg transition">Kilidi Aç · ${item.requiredStars} ⭐</button>`;
+                } else {
+                    actionBtn = `<button disabled class="w-full bg-slate-300 cursor-not-allowed text-white text-[10px] font-black py-1.5 rounded-lg">${item.requiredStars} ⭐ Gerekli</button>`;
+                }
+
+                tile.innerHTML = `
+                    <div class="text-4xl">${item.emoji}</div>
+                    <div class="text-[11px] font-black text-slate-700">${item.name}</div>
+                    ${actionBtn}`;
+                grid.appendChild(tile);
+            });
+        }
+
+        function unlockAvatar(emoji, requiredStars) {
+            if (!currentUser || isTeacherMode) return;
+            if ((currentUser.stars || 0) < requiredStars) { playSound('error'); return; }
+            if (!currentUser.ownedAvatars) currentUser.ownedAvatars = [];
+            currentUser.stars -= requiredStars;
+            currentUser.ownedAvatars.push(emoji);
+            playSound('success');
+            launchConfetti(60);
+            const item = AVATAR_LIBRARY.find(a => a.emoji === emoji);
+            showToast('🎭 Avatar Kilidi Açıldı!', `${item ? item.name : ''} avatarının kilidi açıldı.`, emoji);
+            awardBadge('avatar_unlocker');
+            updateStarsUI();
+            renderAvatarWorkshopGrid();
+            saveState();
+        }
+
+        function equipAvatar(emoji) {
+            if (!currentUser || isTeacherMode) return;
+            currentUser.emoji = emoji;
+            playSound('select');
+            const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            setTxt('user-display-avatar', emoji);
+            setTxt('welcome-avatar-holder', emoji);
+            reactMascot();
+            renderAvatarWorkshopGrid();
+            renderQuickStudentCards();
+            saveState();
+        }
+
+        /* ============================================================
+           SPEED ROUND (Hız Turu)
+           ============================================================ */
+        let isSpeedMode = false;
+        let speedScore = 0;
+        let speedTimeLeft = 60;
+        let speedTimer = null;
+
+        function startSpeedRound() {
+            if (!currentUser || isTeacherMode) return;
+            playSound('select');
+            const activeData = dynamicMEBDatabase[activeGrade];
+            let pool = [];
+            Object.values(activeData.questions).forEach(arr => { pool = pool.concat(arr); });
+            currentQuestions = shuffleArray(pool).slice(0, 60);
+            if (currentQuestions.length === 0) return;
+
+            isSpeedMode = true;
+            speedScore = 0;
+            speedTimeLeft = 60;
+            currentQuestionIndex = 0;
+            activeCategory = 'speed';
+
+            document.getElementById('game-title-badge').textContent = '⏱️ HIZ TURU';
+            switchView('game-screen');
+            loadQuestion();
+            updateSpeedTimerUI();
+            document.getElementById('speed-timer').classList.remove('hidden');
+
+            if (speedTimer) clearInterval(speedTimer);
+            speedTimer = setInterval(() => {
+                speedTimeLeft--;
+                updateSpeedTimerUI();
+                if (speedTimeLeft <= 0) finishSpeedRound();
+            }, 1000);
+        }
+
+        function updateSpeedTimerUI() {
+            const t = document.getElementById('speed-timer');
+            if (!t) return;
+            t.textContent = `⏱️ ${Math.max(0, speedTimeLeft)} sn · ${speedScore} ✓`;
+            t.classList.toggle('timer-low', speedTimeLeft <= 10);
+        }
+
+        function flashGameCard(kind) {
+            const card = document.getElementById('core-game-card');
+            if (!card) return;
+            card.classList.remove('flash-correct', 'flash-wrong');
+            void card.offsetWidth;
+            card.classList.add(kind === 'correct' ? 'flash-correct' : 'flash-wrong');
+        }
+
+        function handleSpeedAnswer(isCorrect) {
+            if (isCorrect) {
+                playSound('success');
+                speedScore++;
+                speedTimeLeft = Math.min(99, speedTimeLeft + 2);
+                grantXP(6, false);
+                flashGameCard('correct');
+            } else {
+                playSound('error');
+                speedTimeLeft = Math.max(1, speedTimeLeft - 3);
+                flashGameCard('wrong');
+            }
+            updateSpeedTimerUI();
+            setTimeout(() => {
+                if (!isSpeedMode || speedTimeLeft <= 0) return;
+                currentQuestionIndex++;
+                if (currentQuestionIndex >= currentQuestions.length) currentQuestionIndex = 0;
+                loadQuestion();
+                document.getElementById('feedback-modal').classList.add('hidden');
+                document.getElementById('btn-check').disabled = false;
+            }, 450);
+        }
+
+        function finishSpeedRound() {
+            if (speedTimer) { clearInterval(speedTimer); speedTimer = null; }
+            isSpeedMode = false;
+            const timerEl = document.getElementById('speed-timer');
+            if (timerEl) timerEl.classList.add('hidden');
+
+            const starsEarned = speedScore * 3;
+            const bonusXP = speedScore * 4;
+            grantXP(bonusXP, false);
+            grantStars(starsEarned);
+            if (speedScore >= 10) awardBadge('speedster');
+            launchConfetti(160);
+            updatePlayerHud();
+            renderBadges();
+            saveState();
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="levelup-pop bg-white rounded-3xl p-8 max-w-md w-full space-y-6 text-center shadow-2xl">
+                    <div class="text-6xl">⏱️</div>
+                    <div class="space-y-1">
+                        <h3 class="text-2xl font-black text-slate-800 brand-font">Süre Doldu!</h3>
+                        <p class="text-slate-500 text-xs">Hız turunda harika gittin!</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div><span class="block text-slate-400 text-[10px] font-semibold">Doğru</span><span class="text-lg font-bold text-emerald-600 font-mono">${speedScore}</span></div>
+                        <div><span class="block text-slate-400 text-[10px] font-semibold">XP</span><span class="text-lg font-bold text-indigo-600 font-mono">+${bonusXP}</span></div>
+                        <div><span class="block text-slate-400 text-[10px] font-semibold">Yıldız</span><span class="text-lg font-bold text-yellow-600 font-mono">+${starsEarned} ⭐</span></div>
+                    </div>
+                    <button onclick="this.closest('.fixed').remove(); goToDashboard();" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">Ana Sayfaya Dön</button>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        /* ============================================================
+           PERSISTENCE (localStorage)
+           ============================================================ */
+        const STORAGE_KEY = 'gramergo_save_v1';
+
+        function saveState() {
+            try {
+                const payload = {};
+                Object.keys(dynamicMEBDatabase).forEach(grade => {
+                    payload[grade] = dynamicMEBDatabase[grade].students.map(s => ({
+                        code: s.code, name: s.name, emoji: s.emoji,
+                        scores: s.scores, streak: s.streak, mistakes: s.mistakes,
+                        xp: s.xp || 0, badges: s.badges || [], bestCombo: s.bestCombo || 0,
+                        stars: s.stars || 0, ownedAvatars: s.ownedAvatars || [],
+                        demo: !!s.demo
+                    }));
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) { /* storage unavailable */ }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    // mark seed students as demo for clean reset support
+                    Object.keys(dynamicMEBDatabase).forEach(g =>
+                        dynamicMEBDatabase[g].students.forEach(s => s.demo = true));
+                    return;
+                }
+                const payload = JSON.parse(raw);
+                Object.keys(payload).forEach(grade => {
+                    if (dynamicMEBDatabase[grade]) {
+                        dynamicMEBDatabase[grade].students = payload[grade].map(migrateStudent);
+                    }
+                });
+            } catch (e) { /* corrupt save ignored */ }
+        }
+
+        // Backward compatibility: old saves used "coins" and "collector" badge.
+        function migrateStudent(s) {
+            if (s.stars === undefined) s.stars = (s.coins !== undefined ? s.coins : 0);
+            delete s.coins;
+            if (Array.isArray(s.badges) && s.badges.includes('collector')) {
+                s.badges = s.badges.filter(b => b !== 'collector');
+                if (!s.badges.includes('avatar_unlocker')) s.badges.push('avatar_unlocker');
+            }
+            return s;
+        }
+
+        const mascotAvatars = [
+            { emoji: "👨‍🚀", name: "Astronot" },
+            { emoji: "🦖", name: "Dino" },
+            { emoji: "🧙‍♂️", name: "Sihirbaz" },
+            { emoji: "🐼", name: "Panda" },
+            { emoji: "🤖", name: "Robot" },
+            { emoji: "🦄", name: "Unicorn" },
+            { emoji: "🦊", name: "Tilki" },
+            { emoji: "🦁", name: "Aslan" },
+            { emoji: "🐨", name: "Koala" },
+            { emoji: "👽", name: "Uzaylı" }
+        ];
+
+        const dynamicMEBDatabase = {
+            5: {
+                units: [
+                    { id: "hello", name: "Unit 1: Hello!", desc: "Ülkeler, diller, okul dersleri ve kendimizi tanıtma.", color: "from-blue-500 to-indigo-500" },
+                    { id: "town", name: "Unit 2: My Town", desc: "Yer yön edatları, sokaklar ve binaları sorma.", color: "from-emerald-500 to-teal-500" },
+                    { id: "hobbies", name: "Unit 3: Games & Hobbies", desc: "Sevilen ve sevilmeyen aktiviteler, yetenekler.", color: "from-amber-500 to-orange-500" },
+                    { id: "routine", name: "Unit 4: My Daily Routine", desc: "Günlük rutin işler, saatler ve geniş zaman.", color: "from-purple-500 to-indigo-500" }
+                ],
+                questions: { hello: [], town: [], hobbies: [], routine: [] },
+                words: [
+                    { en: "library", tr: "kütüphane" },
+                    { en: "bakery", tr: "fırın" },
+                    { en: "country", tr: "ülke" },
+                    { en: "language", tr: "dil" },
+                    { en: "hometown", tr: "memleket" },
+                    { en: "origami", tr: "kağıt katlama" },
+                    { en: "checkers", tr: "dama" },
+                    { en: "playground", tr: "oyun alanı" }
+                ],
+                students: [
+                    { code: "STU-501", name: "Alperen Şahin (Demo)", emoji: "🐼", scores: [85, 90, 75, 80], streak: 12, mistakes: [] },
+                    { code: "STU-502", name: "Ece Yılmaz (Demo)", emoji: "🦊", scores: [45, 50, 40, 35], streak: 2, mistakes: ["Yer Edatı Hatası"] },
+                    { code: "STU-503", name: "Emre Kaya (Demo)", emoji: "🤖", scores: [95, 100, 90, 95], streak: 24, mistakes: [] }
+                ]
+            },
+            6: {
+                units: [
+                    { id: "life", name: "Unit 1: Life", desc: "Günlük aktiviteler, saatler, haftalık rutinler ve tarihler.", color: "from-pink-500 to-indigo-500" },
+                    { id: "yummy", name: "Unit 2: Yummy Breakfast", desc: "Yiyecekler, içecekler, some/any kullanımı ve istek belirtme.", color: "from-amber-500 to-yellow-500" },
+                    { id: "downtown", name: "Unit 3: Downtown", desc: "Şehir hayatı, şimdiki zaman (Present Continuous) ve karşılaştırma (Comparatives).", color: "from-teal-500 to-emerald-500" },
+                    { id: "weather", name: "Unit 4: Weather & Emotions", desc: "Hava durumları, dereceler ve havanın hislerimize etkisi.", color: "from-blue-500 to-cyan-500" }
+                ],
+                questions: { life: [], yummy: [], downtown: [], weather: [] },
+                words: [
+                    { en: "breakfast", tr: "kahvaltı" },
+                    { en: "downtown", tr: "şehir merkezi" },
+                    { en: "countryside", tr: "kırsal bölge" },
+                    { en: "nutritious", tr: "besleyici" },
+                    { en: "fabulous", tr: "harika" },
+                    { en: "stormy", tr: "fırtınalı" },
+                    { en: "noisy", tr: "gürültülü" },
+                    { en: "skit", tr: "kısa oyun" }
+                ],
+                students: [
+                    { code: "STU-601", name: "Defne Aksoy (Demo)", emoji: "🦁", scores: [80, 85, 70, 75], streak: 8, mistakes: [] },
+                    { code: "STU-602", name: "Mert Öztürk (Demo)", emoji: "🐨", scores: [50, 45, 60, 55], streak: 1, mistakes: ["Some/Any Hatası"] }
+                ]
+            },
+            7: {
+                units: [
+                    { id: "appearance", name: "Unit 1: Appearance & Personality", desc: "Dış görünüş ve kişilik sıfatları, karşılaştırma yapıları.", color: "from-purple-500 to-pink-500" },
+                    { id: "biographies", name: "Unit 2: Biographies", desc: "Geçmiş zaman (Simple Past Tense), düzenli/düzensiz fiiller.", color: "from-orange-500 to-red-500" },
+                    { id: "sports", name: "Unit 3: Sports", desc: "Spor türleri, sıklık zarfları, can/could yetenek yapıları.", color: "from-green-500 to-teal-500" },
+                    { id: "wildlife", name: "Unit 4: Wild Animals", desc: "Vahşi hayvanlar, yaşam alanları ve nesli tükenen türler.", color: "from-rose-500 to-amber-500" }
+                ],
+                questions: { appearance: [], biographies: [], sports: [], wildlife: [] },
+                words: [
+                    { en: "generous", tr: "cömert" },
+                    { en: "stubborn", tr: "inatçı" },
+                    { en: "graduated", tr: "mezun oldu" },
+                    { en: "biography", tr: "biyografi" },
+                    { en: "spectator", tr: "seyirci" },
+                    { en: "extinct", tr: "nesli tükenmiş" },
+                    { en: "habitat", tr: "doğal yaşam alanı" },
+                    { en: "mammal", tr: "memeli hayvan" }
+                ],
+                students: [
+                    { code: "STU-701", name: "Ada Yıldız (Demo)", emoji: "🦄", scores: [82, 78, 88, 90], streak: 14, mistakes: [] },
+                    { code: "STU-702", name: "Can Polat (Demo)", emoji: "👨‍🚀", scores: [48, 52, 44, 50], streak: 0, mistakes: ["Geçmiş Zaman Hatası"] }
+                ]
+            },
+            8: {
+                units: [
+                    { id: "friendship", name: "Unit 1: Friendship", desc: "Arkadaşlık, davetler, kabul etme, reddetme ve mazeretler.", color: "from-indigo-500 to-purple-500" },
+                    { id: "teenlife", name: "Unit 2: Teen Life", desc: "Gençlik aktiviteleri, müzik tercihleri, geniş zaman.", color: "from-pink-500 to-rose-500" },
+                    { id: "kitchen", name: "Unit 3: In the Kitchen", desc: "Yemek tarifleri, malzemeler, sıralama zarfları ve süreçler.", color: "from-amber-500 to-yellow-500" },
+                    { id: "phone", name: "Unit 4: On the Phone", desc: "Telefon görüşmeleri, mesajlaşma, yardım hatları ve kalıplar.", color: "from-cyan-500 to-blue-500" }
+                ],
+                questions: { friendship: [], teenlife: [], kitchen: [], phone: [] },
+                words: [
+                    { en: "honest", tr: "dürüst" },
+                    { en: "buddy", tr: "yakın arkadaş" },
+                    { en: "count on", tr: "güvenmek" },
+                    { en: "share", tr: "paylaşmak" },
+                    { en: "unbearable", tr: "katlanılmaz" },
+                    { en: "fry", tr: "yağda kızartmak" },
+                    { en: "bake", tr: "fırında pişirmek" },
+                    { en: "connection", tr: "bağlantı" }
+                ],
+                students: [
+                    { code: "STU-801", name: "Yiğit Koç (Demo)", emoji: "👨‍🚀", scores: [90, 75, 80, 85], streak: 12, mistakes: [] },
+                    { code: "STU-802", name: "Yağmur Çelik (Demo)", emoji: "🦄", scores: [55, 45, 60, 50], streak: 2, mistakes: ["Kelime Sırası Hatası"] }
+                ]
+            }
+        };
+
+        function expandMEBDatabase() {
+            const countries = ["Germany", "France", "Spain", "Italy", "Japan", "Brazil", "Turkey", "Canada", "Korea", "Egypt"];
+            const languages = ["German", "French", "Spanish", "Italian", "Japanese", "Portuguese", "Turkish", "English", "Korean", "Arabic"];
+            const nationalities = ["German", "French", "Spanish", "Italian", "Japanese", "Brazilian", "Turkish", "Canadian", "Korean", "Egyptian"];
+            const schoolSubjects = ["maths", "science", "geography", "history", "english", "art", "music", "physical education", "social studies", "it"];
+            
+            const places = ["bakery", "library", "pharmacy", "hospital", "museum", "school", "park", "bank", "cafe", "station"];
+            const prepositions = ["between", "next to", "behind", "in front of", "opposite", "near", "under", "on"];
+            
+            const regularVerbs = ["played", "watched", "cooked", "brushed", "visited", "cleaned", "studied", "worked", "helped", "started"];
+            const irregularVerbs = [
+                { v1: "go", v2: "went" }, { v1: "see", v2: "saw" }, { v1: "grow", v2: "grew" },
+                { v1: "buy", v2: "bought" }, { v1: "write", v2: "wrote" }, { v1: "speak", v2: "spoke" },
+                { v1: "have", v2: "had" }, { v1: "drink", v2: "drank" }, { v1: "eat", v2: "ate" }
+            ];
+
+            const adjectives = [
+                { adj: "generous", opposite: "selfish", type: "Kişilik Sıfatı" },
+                { adj: "honest", opposite: "dishonest", type: "Kişilik Sıfatı" },
+                { adj: "outgoing", opposite: "shy", type: "Dış Görünüş Sıfatı" },
+                { adj: "helpful", opposite: "unhelpful", type: "Kişilik Sıfatı" },
+                { adj: "stubborn", opposite: "easy-going", type: "Kişilik Sıfatı" }
+            ];
+
+            // Loop Grades
+            for (let grade in dynamicMEBDatabase) {
+                const db = dynamicMEBDatabase[grade];
+                
+                db.units.forEach(unit => {
+                    const id = unit.id;
+                    const questionList = db.questions[id];
+
+                    // Generate until we reach exactly 50 playable questions
+                    while (questionList.length < 50) {
+                        const randomSeed = Math.floor(Math.random() * 1000);
+                        const qIndex = questionList.length + 1;
+
+                        if (grade == "5") {
+                            if (id === "hello") {
+                                if (randomSeed % 2 === 0) {
+                                    const cIdx = randomSeed % countries.length;
+                                    questionList.push({
+                                        type: 'gap_fill',
+                                        title: `Hello! - Q${qIndex} (Dil/Ülke)`,
+                                        errorType: 'Dil/Ülke Karışıklığı',
+                                        explanation: `Ülkeler (${countries[cIdx]}) ve diller (${languages[cIdx]}) farklı kelimelerdir. 'Speak' dillerle kullanılır.`,
+                                        part1: `My classmate is from ${countries[cIdx]}, and they speak`,
+                                        part2: "very well.",
+                                        options: [languages[cIdx], countries[cIdx], nationalities[cIdx], "English"],
+                                        correctAnswer: languages[cIdx]
+                                    });
+                                } else {
+                                    const sub = schoolSubjects[randomSeed % schoolSubjects.length];
+                                    questionList.push({
+                                        type: 'word_order',
+                                        title: `Hello! - Q${qIndex} (Ders Sıralama)`,
+                                        errorType: 'Cümle Sıralama Hatası',
+                                        explanation: "Geniş zamanlı cümle yapısı: Özne (I) + Beğeni Fiili (like/enjoy) + Nesne/Ders adıdır.",
+                                        scrambled: ["like", sub, "studying", "I", "very", "much"],
+                                        correctOrder: ["I", "like", "studying", sub, "very", "much"]
+                                    });
+                                }
+                            } else if (id === "town") {
+                                if (randomSeed % 2 === 0) {
+                                    const p1 = places[randomSeed % places.length];
+                                    const p2 = places[(randomSeed + 1) % places.length];
+                                    const prep = prepositions[randomSeed % prepositions.length];
+                                    questionList.push({
+                                        type: 'gap_fill',
+                                        title: `My Town - Q${qIndex} (Yer Tarifi)`,
+                                        errorType: 'Yer Edatı Hatası',
+                                        explanation: `Konum belirtirken '${prep}' yapısı nesneden önce gelerek konumu niteler.`,
+                                        part1: `You can find the ${p1}`,
+                                        part2: `the green ${p2}.`,
+                                        options: [prep, "between", "under", "through"],
+                                        correctAnswer: prep
+                                    });
+                                } else {
+                                    const p = places[randomSeed % places.length];
+                                    questionList.push({
+                                        type: 'word_order',
+                                        title: `My Town - Q${qIndex} (Yol Tarifi)`,
+                                        errorType: 'Soru Sorma Hatası',
+                                        explanation: "İngilizce kibar soru yapılarında 'Can you' veya 'Where is' kalıpları cümlenin başında yer alır.",
+                                        scrambled: ["Where", "the", "is", p, "please", "?"],
+                                        correctOrder: ["Where", "is", "the", p, "please", "?"]
+                                    });
+                                }
+                            } else if (id === "hobbies") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Hobbies - Q${qIndex} (Yetenekler)`,
+                                    errorType: 'Zıtlık Bağlacı Hatası',
+                                    explanation: "'But' bağlacı olumlu yetenek (can) ile olumsuzluk (can't) arasında zıtlık kurar.",
+                                    part1: "My sister can ride a bicycle,",
+                                    part2: "she can't fly a kite.",
+                                    options: ["but", "and", "because", "so"],
+                                    correctAnswer: "but"
+                                });
+                            } else if (id === "routine") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Daily Routine - Q${qIndex} (Geniş Zaman)`,
+                                    errorType: 'Geniş Zaman Çekim Hatası',
+                                    explanation: "He, She, It özneleriyle geniş zamanda fiile '-s', '-es' takısı getirilir.",
+                                    part1: "My mother usually",
+                                    part2: "shopping at the local market.",
+                                    options: ["goes", "go", "going", "went"],
+                                    correctAnswer: "goes"
+                                });
+                            }
+                        }
+
+                        if (grade == "6") {
+                            if (id === "life") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Life - Q${qIndex} (Günlük Yaşam)`,
+                                    errorType: 'Tarih Edatı Hatası',
+                                    explanation: "Belirli günlerde ve tam tarihlerden önce 'on' edatı kullanılır.",
+                                    part1: "We always visit our grand parents",
+                                    part2: "Saturdays.",
+                                    options: ["on", "at", "in", "by"],
+                                    correctAnswer: "on"
+                                });
+                            } else if (id === "yummy") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Breakfast - Q${qIndex} (Some/Any)`,
+                                    errorType: 'Some / Any Kullanım Hatası',
+                                    explanation: "Sorularda ve olumsuz cümlelerde 'any' (hiç) kullanılır.",
+                                    part1: "Is there",
+                                    part2: "cheese left on the plate?",
+                                    options: ["any", "some", "a", "an"],
+                                    correctAnswer: "any"
+                                });
+                            } else if (id === "downtown") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Downtown - Q${qIndex} (Karşılaştırma)`,
+                                    errorType: 'Karşılaştırma (Comparative) Hatası',
+                                    explanation: "Karşılaştırmalarda tek heceli sıfatlar '-er' takısı alıp 'than' ile kullanılır.",
+                                    part1: "The city life is",
+                                    part2: "the village life.",
+                                    options: ["busier than", "busy than", "more busy", "as busy"],
+                                    correctAnswer: "busier than"
+                                });
+                            } else if (id === "weather") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Weather - Q${qIndex} (Hava Durumu)`,
+                                    errorType: 'Hava Durumu-Sıfat Hatası',
+                                    explanation: "Rüzgarlı havalarda uçurtma uçurmak (windy) için en ideal hava durumudur.",
+                                    part1: "We go outside to fly our kites when it is",
+                                    part2: "outside.",
+                                    options: ["windy", "snowy", "rainy", "hot"],
+                                    correctAnswer: "windy"
+                                });
+                            }
+                        }
+
+                        if (grade == "7") {
+                            if (id === "appearance") {
+                                const adjPair = adjectives[randomSeed % adjectives.length];
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Appearance - Q${qIndex} (Kişilik)`,
+                                    errorType: 'Sıfat Karışıklığı',
+                                    explanation: `Zıt anlamlı sıfatlar: ${adjPair.adj} ve ${adjPair.opposite} tamamen zıt anlam taşır.`,
+                                    part1: `My teacher is definitely not ${adjPair.opposite}, she is extremely`,
+                                    part2: "and treats everyone nicely.",
+                                    options: [adjPair.adj, adjPair.opposite, "stubborn", "lazy"],
+                                    correctAnswer: adjPair.adj
+                                });
+                            } else if (id === "biographies") {
+                                const irr = irregularVerbs[randomSeed % irregularVerbs.length];
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Biographies - Q${qIndex} (Geçmiş Zaman)`,
+                                    errorType: 'Geçmiş Zaman Fiil Çekimi',
+                                    explanation: `'${irr.v1}' düzensiz bir fiildir ve Geçmiş Zaman (Past Simple) hali '${irr.v2}' şeklindedir.`,
+                                    part1: `She`,
+                                    part2: "to the school library yesterday afternoon.",
+                                    options: [irr.v2, irr.v1, `${irr.v1}ed`, `${irr.v1}s`],
+                                    correctAnswer: irr.v2
+                                });
+                            } else if (id === "sports") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Sports - Q${qIndex} (Sıklık)`,
+                                    errorType: 'Sıklık Zarfı Anlam Hatası',
+                                    explanation: "Sıklık sorularında 'How often' (ne sıklıkla) kalıbı kullanılır.",
+                                    part1: "How",
+                                    part2: "do you practice basketball after school?",
+                                    options: ["often", "many", "much", "long"],
+                                    correctAnswer: "often"
+                                });
+                            } else if (id === "wildlife") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Wildlife - Q${qIndex} (Tavsiyeler)`,
+                                    errorType: 'Öneri / Zorunluluk Modalları',
+                                    explanation: "Doğayı korumak ve hayvanları avlamamak için 'shouldn't' (yapmamalıyız) seçilmelidir.",
+                                    part1: "We",
+                                    part2: "hunt wild animals for our hobbies.",
+                                    options: ["shouldn't", "should", "must", "can"],
+                                    correctAnswer: "shouldn't"
+                                });
+                            }
+                        }
+
+                        if (grade == "8") {
+                            if (id === "friendship") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Friendship - Q${qIndex} (Mazeret)`,
+                                    errorType: 'Bağlaç / Mazeret Hatası',
+                                    explanation: "Davetleri reddederken kullanılan mazeret ifadelerinden önce 'but' (ama) konur.",
+                                    part1: "I would love to come to your birthday party,",
+                                    part2: "I am too busy studying for LGS.",
+                                    options: ["but", "so", "and", "because"],
+                                    correctAnswer: "but"
+                                });
+                            } else if (id === "teenlife") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Teen Life - Q${qIndex} (Tercihler)`,
+                                    errorType: 'Tercih Yapısı Hatası',
+                                    explanation: "'Prefer' yapısında tercih edilen şey ile edilmeyen arasına 'to' edatı gelir.",
+                                    part1: "I prefer staying at home",
+                                    part2: "going out with annoying people.",
+                                    options: ["to", "than", "rather", "from"],
+                                    correctAnswer: "to"
+                                });
+                            } else if (id === "kitchen") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Kitchen - Q${qIndex} (Tarif Sıralaması)`,
+                                    errorType: 'Süreç/Bağlaç Sıralama Hatası',
+                                    explanation: "Yemek tariflerinin ilk adımı her zaman 'First' (İlk olarak) şeklinde başlar.",
+                                    part1: "First",
+                                    part2: "wash the vegetables under warm water.",
+                                    options: ["First", "Finally", "Next", "After that"],
+                                    correctAnswer: "First"
+                                });
+                            } else if (id === "phone") {
+                                questionList.push({
+                                    type: 'gap_fill',
+                                    title: `Phone - Q${qIndex} (Telefon Kalıpları)`,
+                                    errorType: 'Telefon Kalıpları Hatası',
+                                    explanation: "Telefonda birini bekletirken kullanılan kalıp 'hold on' ya da 'hang on' şeklindedir.",
+                                    part1: "Could you",
+                                    part2: "for a minute? I will get him.",
+                                    options: ["hold on", "call back", "hang up", "pick up"],
+                                    correctAnswer: "hold on"
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        let activeGrade = "8"; 
+        let currentUser = null; 
+        let isTeacherMode = false; 
+
+        let selectedRegAvatar = mascotAvatars[0].emoji;
+        let selectedRegGrade = "8";
+        let quickListGrade = "8";
+
+        let activeCategory = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let selectedWords = [];
+        let wordOrderSourcePool = [];
+        let masteryScore = 0; 
+        let currentCombo = 0;
+        let missionMistakeCount = 0;
+        let missionCorrectCount = 0;
+
+        let matcherRoundWords = [];
+        let firstSelectedCard = null;
+        let matchedPairsCount = 0;
+        let matcherScore = 0;
+
+        let teacherFilteredGrade = "8";
+
+        window.onload = function() {
+            // Run procedural generator instantly on start to create 50+ questions per level!
+            expandMEBDatabase();
+            loadState();
+            renderAvatarSelectionGrid();
+            renderQuickStudentCards();
+            switchView('login-portal');
+        };
+
+        function calculateRank(student, grade) {
+            const students = dynamicMEBDatabase[grade].students;
+            const list = students.map(s => {
+                const avg = s.scores.length > 0 ? s.scores.reduce((a, b) => a + b, 0) / s.scores.length : 0;
+                return { code: s.code, avg: avg };
+            });
+            list.sort((a, b) => b.avg - a.avg);
+            const rankIndex = list.findIndex(item => item.code === student.code);
+            return rankIndex !== -1 ? rankIndex + 1 : list.length;
+        }
+
+        function updateSpacedRepetitionHighlight(student) {
+            const highlightSpan = document.getElementById('repetition-subject-highlight');
+            if (!highlightSpan) return;
+            if (student.mistakes && student.mistakes.length > 0) {
+                const counts = {};
+                student.mistakes.forEach(m => counts[m] = (counts[m] || 0) + 1);
+                const mostFrequent = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                highlightSpan.textContent = `"${mostFrequent}"`;
+            } else {
+                highlightSpan.textContent = "Temel Gramer Yapıları (Henüz hata yapmadın! 🌟)";
+            }
+        }
+
+        function renderAvatarSelectionGrid() {
+            const grid = document.getElementById('avatar-grid-select');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            mascotAvatars.forEach((avatar) => {
+                const button = document.createElement('button');
+                const isSelected = selectedRegAvatar === avatar.emoji;
+                button.className = `p-3 rounded-2xl text-2xl transition-all duration-200 border-2 ${isSelected ? 'border-indigo-600 bg-indigo-50 scale-110 shadow-md ring-2 ring-indigo-200' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'} flex items-center justify-center bounce-hover`;
+                button.innerHTML = `<span>${avatar.emoji}</span>`;
+                button.onclick = (e) => {
+                    e.preventDefault();
+                    selectedRegAvatar = avatar.emoji;
+                    playSound('select');
+                    renderAvatarSelectionGrid();
+                };
+                grid.appendChild(button);
+            });
+        }
+
+        function selectGradeToReg(grade) {
+            selectedRegGrade = grade;
+            for (let g = 5; g <= 8; g++) {
+                const btn = document.getElementById(`reg-grade-${g}`);
+                if (btn) {
+                    if (g.toString() === grade) {
+                        btn.className = "py-3 px-1 rounded-2xl text-xs font-black border-2 border-indigo-500 bg-indigo-50 text-indigo-700 transition";
+                    } else {
+                        btn.className = "py-3 px-1 rounded-2xl text-xs font-black border-2 border-slate-100 bg-slate-50 hover:bg-slate-100 text-slate-600 transition";
+                    }
+                }
+            }
+            playSound('select');
+        }
+
+        function renderQuickStudentCards() {
+            const grid = document.getElementById('quick-students-card-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const students = dynamicMEBDatabase[quickListGrade].students;
+            
+            if (students.length === 0) {
+                grid.innerHTML = `<div class="col-span-2 text-center text-slate-400 text-xs py-8 font-semibold">Kayıtlı kadet bulunmuyor.</div>`;
+                return;
+            }
+
+            students.forEach(student => {
+                const card = document.createElement('button');
+                card.className = "bg-slate-50 border-2 border-slate-100 rounded-3xl p-4 text-left transition-all duration-200 hover:border-indigo-500 hover:bg-indigo-50/20 flex items-center space-x-3 bounce-hover w-full shadow-sm";
+                const averageScore = student.scores.reduce((a,b)=>a+b,0) > 0 ? Math.round(student.scores.reduce((a,b)=>a+b,0)/student.scores.length) : 0;
+                card.innerHTML = `
+                    <div class="text-3xl p-2 bg-white rounded-2xl shadow-sm border border-slate-100">${student.emoji || '👨‍🚀'}</div>
+                    <div class="flex-grow">
+                        <h4 class="font-bold text-slate-800 text-sm leading-tight">${student.name}</h4>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">${student.code}</div>
+                        <div class="mt-1.5 flex items-center space-x-1">
+                            <span class="text-[9px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Ustalık: %${averageScore}</span>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => loginAsExistingStudent(student);
+                grid.appendChild(card);
+            });
+        }
+
+        function filterQuickListGrade(grade) {
+            quickListGrade = grade;
+            for (let g = 5; g <= 8; g++) {
+                const btn = document.getElementById(`ql-g-${g}`);
+                if (btn) {
+                    if (g.toString() === grade) {
+                        btn.className = "flex-1 py-1 px-1 text-[10px] font-black rounded-lg bg-purple-600 text-white shadow";
+                    } else {
+                        btn.className = "flex-1 py-1 px-1 text-[10px] font-black rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+                    }
+                }
+            }
+            playSound('select');
+            renderQuickStudentCards();
+        }
+
+        // REGISTER NEW STUDENT (STRICT 0 SCORE MANDATE)
+        function createNewStudentProfile() {
+            const nameInput = document.getElementById('reg-name');
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                alert("Lütfen uzay kadet adınızı yazın!");
+                return;
+            }
+
+            const newId = `KDT-${Math.floor(1000 + Math.random() * 9000)}`;
+            
+            // STRICT COMPLIANCE: Exactly 0 scores for all units on fresh start!
+            const defaultScores = [0, 0, 0, 0]; 
+
+            const newStudent = {
+                code: newId,
+                name: name,
+                emoji: selectedRegAvatar,
+                scores: defaultScores,
+                streak: 0,
+                mistakes: [],
+                xp: 0,
+                badges: [],
+                bestCombo: 0,
+                stars: 0,
+                ownedAvatars: [selectedRegAvatar]
+            };
+
+            dynamicMEBDatabase[selectedRegGrade].students.push(newStudent);
+
+            playSound('complete');
+            saveState();
+            loginAsExistingStudent(newStudent, selectedRegGrade);
+            nameInput.value = '';
+        }
+
+        function loginAsExistingStudent(student, gradeOverride) {
+            const finalGrade = gradeOverride || quickListGrade;
+            activeGrade = finalGrade;
+            currentUser = student;
+            isTeacherMode = false;
+
+            if (student.streak === undefined) student.streak = 0;
+            if (student.mistakes === undefined) student.mistakes = [];
+            if (student.xp === undefined) student.xp = 0;
+            if (student.badges === undefined) student.badges = [];
+            if (student.bestCombo === undefined) student.bestCombo = 0;
+            migrateStudent(student);
+            if (student.ownedAvatars === undefined || student.ownedAvatars.length === 0) student.ownedAvatars = student.emoji ? [student.emoji] : [];
+
+            const sum = student.scores.reduce((a, b) => a + b, 0);
+            masteryScore = sum > 0 ? Math.round(sum / student.scores.length) : 0;
+
+            document.getElementById('header-controls').classList.remove('hidden');
+            document.getElementById('user-display-name').textContent = student.name;
+            document.getElementById('user-display-avatar').textContent = student.emoji || '👨‍🚀';
+            document.getElementById('user-display-grade').textContent = `${finalGrade}. Sınıf`;
+            document.getElementById('welcome-student-name').textContent = student.name;
+            document.getElementById('welcome-avatar-holder').textContent = student.emoji || '👨‍🚀';
+            
+            document.getElementById('header-mastery').textContent = masteryScore;
+            document.getElementById('header-streak').textContent = `${student.streak} Gün`;
+            document.getElementById('header-rank').textContent = `Sıra #${calculateRank(student, finalGrade)}`;
+
+            updateSpacedRepetitionHighlight(student);
+            updatePlayerHud();
+            updateStarsUI();
+            renderBadges();
+
+            playSound('success');
+            changeGradeLevel();
+            goToDashboard();
+        }
+
+        function loginAsTeacher() {
+            const passcode = document.getElementById('teacher-passcode').value.trim();
+
+            if (passcode === "MEB2026" || passcode === "") {
+                isTeacherMode = true;
+                currentUser = { name: "Ahmet Öğretmen", role: "teacher" };
+
+                document.getElementById('header-controls').classList.remove('hidden');
+                document.getElementById('user-display-name').textContent = "Ahmet Öğretmen";
+                document.getElementById('user-display-avatar').textContent = "🎓";
+                document.getElementById('user-display-grade').textContent = "Yönetici";
+
+                playSound('complete');
+                switchView('teacher-dashboard');
+                renderTeacherPanels();
+            } else {
+                playSound('error');
+                alert("Hatalı öğretmen kodu! (MEB2026)");
+            }
+        }
+
+        function setLoginType(type) {
+            const tabStudent = document.getElementById('login-tab-student');
+            const tabTeacher = document.getElementById('login-tab-teacher');
+            const formStudent = document.getElementById('student-login-form');
+            const formTeacher = document.getElementById('teacher-login-form');
+
+            playSound('select');
+
+            if (type === 'student') {
+                tabStudent.className = "flex-1 py-3 rounded-2xl text-xs font-black transition bg-white text-indigo-900 shadow-md";
+                tabTeacher.className = "flex-1 py-3 rounded-2xl text-xs font-black transition text-slate-600 hover:text-slate-800";
+                formStudent.classList.remove('hidden');
+                formTeacher.classList.add('hidden');
+            } else {
+                tabTeacher.className = "flex-1 py-3 rounded-2xl text-xs font-black transition bg-white text-indigo-900 shadow-md";
+                tabStudent.className = "flex-1 py-3 rounded-2xl text-xs font-black transition text-slate-600 hover:text-slate-800";
+                formTeacher.classList.remove('hidden');
+                formStudent.classList.add('hidden');
+            }
+        }
+
+        function logout() {
+            if (speedTimer) { clearInterval(speedTimer); speedTimer = null; }
+            isSpeedMode = false;
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            currentUser = null;
+            isTeacherMode = false;
+            document.getElementById('header-controls').classList.add('hidden');
+            playSound('error');
+            switchView('login-portal');
+            renderQuickStudentCards();
+        }
+
+        function goToDashboard() {
+            if (isTeacherMode) {
+                switchView('teacher-dashboard');
+            } else {
+                switchView('student-dashboard');
+            }
+        }
+
+        function changeGradeLevel() {
+            document.getElementById('current-grade-badge').textContent = `${activeGrade}. Sınıf Müfredatı`;
+            document.getElementById('unit-count-badge').textContent = `${dynamicMEBDatabase[activeGrade].units.length} Ünite Aktif`;
+
+            renderMissions();
+            renderTeacherPanels();
+        }
+
+        function renderMissions() {
+            const grid = document.getElementById('dashboard-missions-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const activeData = dynamicMEBDatabase[activeGrade];
+            activeData.units.forEach((unit, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl p-6 shadow-md border border-slate-100 bounce-hover transition-all duration-300 flex flex-col justify-between group";
+                
+                let studentScore = 0;
+                if (currentUser) {
+                    const dbStudent = activeData.students.find(s => s.code === currentUser.code);
+                    if (dbStudent && dbStudent.scores[idx] !== undefined) {
+                        studentScore = dbStudent.scores[idx];
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <span class="bg-gradient-to-r ${unit.color} text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">${unit.id}</span>
+                            <span class="text-slate-400 text-xs font-bold">50+ Aktif Soru</span>
+                        </div>
+                        <h4 class="text-lg font-black text-slate-800">${unit.name}</h4>
+                        <p class="text-slate-500 text-xs leading-relaxed">${unit.desc}</p>
+                        <div class="space-y-1 pt-2">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-400">
+                                <span>Kazanım Tamamlama</span>
+                                <span class="text-indigo-600">%${studentScore}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-indigo-600 h-full rounded-full" style="width: ${studentScore}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="startMission('${unit.id}')" class="mt-5 w-full bg-slate-900 hover:bg-indigo-600 text-white text-xs font-black py-3 px-4 rounded-xl transition-all duration-200 group-hover:shadow-md">
+                        Göreve Çık (10 Soru) 🚀
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function startMission(categoryId) {
+            playSound('select');
+            const activeData = dynamicMEBDatabase[activeGrade];
+            
+            if (categoryId === 'repetition') {
+                let allQuestions = [];
+                Object.values(activeData.questions).forEach(qArray => {
+                    allQuestions = allQuestions.concat(qArray);
+                });
+                // Shuffle entire list of 200+ generated questions, pick 10
+                currentQuestions = shuffleArray(allQuestions).slice(0, 10); 
+                activeCategory = 'repetition';
+            } else {
+                activeCategory = categoryId;
+                // Shuffle target unit's 50+ questions and slice exactly 10
+                const targetPool = activeData.questions[categoryId];
+                currentQuestions = shuffleArray([...targetPool]).slice(0, 10);
+            }
+            
+            currentQuestionIndex = 0;
+            currentCombo = 0;
+            missionMistakeCount = 0;
+            missionCorrectCount = 0;
+            isSpeedMode = false;
+            const timerEl = document.getElementById('speed-timer');
+            if (timerEl) timerEl.classList.add('hidden');
+            switchView('game-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            document.getElementById('btn-check').disabled = false;
+
+            const q = currentQuestions[currentQuestionIndex];
+            
+            if (isSpeedMode) {
+                document.getElementById('game-title-badge').textContent = '⏱️ HIZ TURU';
+                document.getElementById('game-step').textContent = `Doğru: ${speedScore}`;
+            } else {
+                document.getElementById('game-title-badge').textContent = q.title;
+                document.getElementById('game-step').textContent = `Soru ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+            }
+
+            document.getElementById('game-word-order').classList.add('hidden');
+            document.getElementById('game-gap-fill').classList.add('hidden');
+
+            if (q.type === 'word_order') {
+                setupWordOrder(q);
+            } else if (q.type === 'gap_fill') {
+                setupGapFill(q);
+            }
+        }
+
+        function setupWordOrder(q) {
+            document.getElementById('game-word-order').classList.remove('hidden');
+            selectedWords = [];
+            wordOrderSourcePool = [...q.scrambled];
+            renderWordOrderUI();
+        }
+
+        function renderWordOrderUI() {
+            const targetContainer = document.getElementById('sentence-target');
+            const sourceContainer = document.getElementById('sentence-source');
+
+            if (!targetContainer || !sourceContainer) return;
+
+            targetContainer.innerHTML = '';
+            if (selectedWords.length === 0) {
+                targetContainer.innerHTML = `<span class="text-slate-400 text-xs italic">Kelimeleri dizmek için tıklayın...</span>`;
+            } else {
+                selectedWords.forEach((word, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-200 text-indigo-800 text-sm font-bold px-3 py-1.5 rounded-xl transition flex items-center space-x-1 animate-fade-in";
+                    btn.innerHTML = `<span>${word}</span> <span class="text-[10px] text-indigo-400">×</span>`;
+                    btn.onclick = () => {
+                        playSound('select');
+                        removeWordFromSentence(idx);
+                    };
+                    targetContainer.appendChild(btn);
+                });
+            }
+
+            sourceContainer.innerHTML = '';
+            wordOrderSourcePool.forEach((word, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-semibold px-4 py-3 rounded-xl shadow-sm hover:shadow transition duration-200";
+                btn.textContent = word;
+                btn.onclick = () => {
+                    playSound('select');
+                    addWordToSentence(idx);
+                };
+                sourceContainer.appendChild(btn);
+            });
+        }
+
+        function addWordToSentence(index) {
+            const word = wordOrderSourcePool.splice(index, 1)[0];
+            selectedWords.push(word);
+            renderWordOrderUI();
+        }
+
+        function removeWordFromSentence(index) {
+            const word = selectedWords.splice(index, 1)[0];
+            wordOrderSourcePool.push(word);
+            renderWordOrderUI();
+        }
+
+        function setupGapFill(q) {
+            document.getElementById('game-gap-fill').classList.remove('hidden');
+
+            document.getElementById('gap-part1').textContent = q.part1;
+            document.getElementById('gap-part2').textContent = q.part2;
+            document.getElementById('gap-field').textContent = '? ? ?';
+
+            const optionsContainer = document.getElementById('gap-options');
+            if (!optionsContainer) return;
+            optionsContainer.innerHTML = '';
+
+            currentSelectedGapAnswer = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-800 font-bold py-4 px-4 rounded-2xl shadow-sm transition duration-200 text-sm flex items-center justify-center option-button";
+                btn.innerHTML = `<span>${opt}</span>`;
+                btn.onclick = (e) => {
+                    playSound('select');
+                    selectGapOption(opt, e.currentTarget);
+                };
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        let currentSelectedGapAnswer = '';
+
+        function selectGapOption(val, element) {
+            currentSelectedGapAnswer = val;
+            document.getElementById('gap-field').textContent = val;
+            
+            document.querySelectorAll('.option-button').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-800');
+            });
+            element.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-800');
+        }
+
+        function checkAnswer() {
+            const q = currentQuestions[currentQuestionIndex];
+            let isCorrect = false;
+
+            if (q.type === 'word_order') {
+                isCorrect = selectedWords.join(' ').toLowerCase() === q.correctOrder.join(' ').toLowerCase();
+            } else if (q.type === 'gap_fill') {
+                isCorrect = currentSelectedGapAnswer === q.correctAnswer;
+            }
+
+            document.getElementById('btn-check').disabled = true;
+
+            if (isSpeedMode) {
+                handleSpeedAnswer(isCorrect);
+                return;
+            }
+
+            showFeedback(isCorrect, q);
+        }
+
+        function showFeedback(isCorrect, question) {
+            const modal = document.getElementById('feedback-modal');
+            const bg = document.getElementById('feedback-bg');
+            const iconHolder = document.getElementById('feedback-icon-holder');
+            const status = document.getElementById('feedback-status');
+            const errorTag = document.getElementById('feedback-error-tag');
+            const explanation = document.getElementById('feedback-explanation');
+            const spacedRepBox = document.getElementById('spaced-rep-box');
+
+            if (!modal) return;
+            modal.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSound('success');
+                bg.className = "rounded-3xl p-6 border bg-emerald-50 border-emerald-200 text-emerald-900 pop-effect";
+                iconHolder.className = "p-3 rounded-full bg-emerald-500 text-white shadow-md";
+                iconHolder.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                `;
+                status.textContent = "Harika! Doğru Cevap 🎉";
+                errorTag.textContent = "USTALIK SEVİYESİ ARTTI";
+                explanation.textContent = "Harika bir dil sezgisi! Kuralları doğru uygulayarak hedefe bir adım daha yaklaştın.";
+                spacedRepBox.className = "bg-white/40 p-3 rounded-xl border border-white/20 text-xs flex items-center space-x-2 text-emerald-800 mt-2";
+                document.getElementById('spaced-rep-text').textContent = "Bu konu başarı hanene eklendi. Tekrar aralığı uzatıldı.";
+                adjustMastery(3); 
+                updateLiveStudentScore(true);
+
+                missionCorrectCount++;
+                currentCombo++;
+                if (currentUser && !isTeacherMode) {
+                    currentUser.bestCombo = Math.max(currentUser.bestCombo || 0, currentCombo);
+                }
+                // XP: base 10 + combo bonus (capped)
+                const comboBonus = Math.min(currentCombo - 1, 5) * 2;
+                grantXP(10 + comboBonus);
+                if (currentCombo >= 3) {
+                    status.textContent = `🔥 ${currentCombo}'li Seri! Doğru Cevap`;
+                }
+                checkBadges();
+            } else {
+                playSound('error');
+                bg.className = "rounded-3xl p-6 border bg-rose-50 border-rose-200 text-rose-900 shake-effect";
+                iconHolder.className = "p-3 rounded-full bg-rose-500 text-white shadow-md";
+                iconHolder.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+                status.textContent = "Gelişmek için Harika Bir Hata!";
+                errorTag.textContent = `Hata Türü: ${question.errorType}`;
+                explanation.innerHTML = `
+                    <strong>Neden Yanlış?</strong><br>
+                    ${question.explanation}
+                `;
+                spacedRepBox.className = "bg-white/40 p-3 rounded-xl border border-white/20 text-xs flex items-center space-x-2 text-rose-800 mt-2";
+                document.getElementById('spaced-rep-text').textContent = "GRAMERGO hata etiketleme sistemi bu hatayı öğretmen raporuna ve unutma eğrisine işledi.";
+                
+                if (currentUser && !isTeacherMode) {
+                    const students = dynamicMEBDatabase[activeGrade].students;
+                    const dbStudent = students.find(s => s.code === currentUser.code);
+                    if (dbStudent) {
+                        if (!dbStudent.mistakes) dbStudent.mistakes = [];
+                        if (!dbStudent.mistakes.includes(question.errorType)) {
+                            dbStudent.mistakes.push(question.errorType);
+                        }
+                        currentUser.mistakes = dbStudent.mistakes;
+                        updateSpacedRepetitionHighlight(currentUser);
+                    }
+                }
+                
+                adjustMastery(-1);
+                updateLiveStudentScore(false);
+                currentCombo = 0;
+                missionMistakeCount++;
+                saveState();
+            }
+
+            reactMascot();
+
+            const isLast = currentQuestionIndex === currentQuestions.length - 1;
+            document.getElementById('btn-feedback-next').textContent = isLast ? "Görevi Bitir 🏁" : "Sonraki Soru →";
+        }
+
+        function updateLiveStudentScore(isCorrect) {
+            if (currentUser && !isTeacherMode) {
+                const students = dynamicMEBDatabase[activeGrade].students;
+                const dbStudent = students.find(s => s.code === currentUser.code);
+                if (dbStudent) {
+                    const activeData = dynamicMEBDatabase[activeGrade];
+                    const unitIndex = activeData.units.findIndex(u => u.id === activeCategory);
+                    
+                    if (unitIndex !== -1) {
+                        if (isCorrect) {
+                            dbStudent.scores[unitIndex] = Math.min(100, (dbStudent.scores[unitIndex] || 0) + 10);
+                        } else {
+                            dbStudent.scores[unitIndex] = Math.max(0, (dbStudent.scores[unitIndex] || 0) - 5);
+                        }
+                    } else {
+                        const randIndex = Math.floor(Math.random() * dbStudent.scores.length);
+                        if (isCorrect) {
+                            dbStudent.scores[randIndex] = Math.min(100, dbStudent.scores[randIndex] + 5);
+                        } else {
+                            dbStudent.scores[randIndex] = Math.max(0, dbStudent.scores[randIndex] - 4);
+                        }
+                    }
+
+                    const sum = dbStudent.scores.reduce((a, b) => a + b, 0);
+                    masteryScore = Math.round(sum / dbStudent.scores.length);
+                    document.getElementById('header-mastery').textContent = masteryScore;
+                    document.getElementById('header-rank').textContent = `Sıra #${calculateRank(currentUser, activeGrade)}`;
+
+                    renderTeacherPanels();
+                }
+            }
+        }
+
+        function useHint() {
+            playSound('select');
+            const q = currentQuestions[currentQuestionIndex];
+            adjustMastery(-5);
+            
+            const hintModal = document.createElement('div');
+            hintModal.className = "fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in";
+            hintModal.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-xl">
+                    <div class="flex items-center space-x-2 text-amber-500">
+                        <span class="text-2xl">💡</span>
+                        <h4 class="font-bold text-lg text-slate-800">İpucu Kullanıldı</h4>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">${q.explanation.split('.')[0]}.</p>
+                    <button onclick="this.closest('.fixed').remove()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition">
+                        Anladım, Devam Et
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(hintModal);
+        }
+
+        function nextQuestion() {
+            playSound('select');
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                finishMission();
+            }
+        }
+
+        function finishMission() {
+            playSound('complete');
+            launchConfetti(180);
+
+            const flawless = missionMistakeCount === 0 && missionCorrectCount > 0;
+            let bonusXP = 0;
+
+            if (currentUser && !isTeacherMode) {
+                currentUser.streak = (currentUser.streak || 0) + 1;
+                const students = dynamicMEBDatabase[activeGrade].students;
+                const dbStudent = students.find(s => s.code === currentUser.code);
+                if (dbStudent) {
+                    dbStudent.streak = currentUser.streak;
+                    
+                    const activeData = dynamicMEBDatabase[activeGrade];
+                    const unitIndex = activeData.units.findIndex(u => u.id === activeCategory);
+                    if (unitIndex !== -1) {
+                        dbStudent.scores[unitIndex] = Math.min(100, (dbStudent.scores[unitIndex] || 0) + 15);
+                    }
+                    
+                    const sum = dbStudent.scores.reduce((a, b) => a + b, 0);
+                    masteryScore = Math.round(sum / dbStudent.scores.length);
+                }
+
+                // Completion bonus XP (mission + flawless reward)
+                bonusXP = 40 + (flawless ? 30 : 0);
+                grantXP(bonusXP, false);
+                grantStars(10 + (flawless ? 5 : 0) + missionCorrectCount);
+                checkBadges({ missionDone: true, flawless: flawless });
+                renderBadges();
+                saveState();
+            }
+
+            document.getElementById('header-streak').textContent = `${currentUser ? currentUser.streak : 1} Gün`;
+            document.getElementById('header-mastery').textContent = masteryScore;
+            document.getElementById('header-rank').textContent = currentUser ? `Sıra #${calculateRank(currentUser, activeGrade)}` : 'Sıra #--';
+            updatePlayerHud();
+
+            const successModal = document.createElement('div');
+            successModal.className = "fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50";
+            successModal.innerHTML = `
+                <div class="bg-white rounded-3xl p-8 max-w-md w-full space-y-6 text-center shadow-2xl levelup-pop">
+                    <div class="text-6xl animate-bounce">🏆</div>
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-black text-slate-800 brand-font">Görev Tamamlandı!</h3>
+                        <p class="text-slate-500 text-xs">${flawless ? '💎 Kusursuz bir tur! Hiç hata yapmadın.' : `${missionCorrectCount} doğru cevap verdin.`}</p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div>
+                            <span class="block text-slate-400 text-[10px] font-semibold">Kazanılan XP</span>
+                            <span class="text-lg font-bold text-indigo-600 font-mono">+${bonusXP}</span>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-[10px] font-semibold">Ustalık</span>
+                            <span class="text-lg font-bold text-emerald-600 font-mono">%${masteryScore}</span>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-[10px] font-semibold">Seri</span>
+                            <span class="text-lg font-bold text-amber-600 font-mono">${currentUser ? currentUser.streak : 1} 🔥</span>
+                        </div>
+                    </div>
+
+                    <button onclick="this.closest('.fixed').remove(); goToDashboard();" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
+                        Ana Sayfaya Dön
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+        }
+
+        function startWordMatcher() {
+            playSound('select');
+            switchView('word-matcher-screen');
+            resetMatcherRound();
+        }
+
+        function resetMatcherRound() {
+            const activeData = dynamicMEBDatabase[activeGrade];
+            const wordPool = activeData.words;
+            
+            const selectedPool = shuffleArray([...wordPool]).slice(0, 4);
+            
+            const cardItems = [];
+            selectedPool.forEach(word => {
+                cardItems.push({ id: word.en, label: word.en, type: 'en', matched: false });
+                cardItems.push({ id: word.en, label: word.tr, type: 'tr', matched: false });
+            });
+
+            matcherRoundWords = shuffleArray(cardItems);
+            firstSelectedCard = null;
+            matchedPairsCount = 0;
+
+            renderMatcherGrid();
+        }
+
+        function renderMatcherGrid() {
+            const grid = document.getElementById('matcher-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            matcherRoundWords.forEach((card, index) => {
+                const cardOuter = document.createElement('div');
+                cardOuter.className = "h-28 w-full cursor-pointer group";
+                
+                const cardInner = document.createElement('div');
+                cardInner.className = "card-inner w-full h-full relative duration-500 shadow-lg rounded-3xl";
+                cardInner.id = `matcher-card-inner-${index}`;
+
+                const cardBack = document.createElement('div');
+                cardBack.className = "card-back absolute inset-0 bg-gradient-to-tr from-indigo-600 to-pink-500 rounded-3xl border-4 border-white flex flex-col items-center justify-center text-white p-2 text-center shadow-inner font-black";
+                cardBack.innerHTML = `
+                    <span class="text-3xl filter drop-shadow opacity-95">GO</span>
+                    <span class="text-[8px] tracking-widest uppercase text-pink-200">Kelimeni Çevir</span>
+                `;
+
+                const cardFront = document.createElement('div');
+                cardFront.className = "card-front absolute inset-0 bg-white rounded-3xl border-4 border-slate-100 text-slate-800 flex items-center justify-center p-3 text-center font-bold text-xs md:text-sm shadow-md transition-all";
+                cardFront.textContent = card.label;
+                if (card.type === 'en') {
+                    const speakBtn = document.createElement('button');
+                    speakBtn.className = "absolute top-1.5 right-1.5 text-base bg-indigo-50 hover:bg-indigo-100 rounded-full w-7 h-7 flex items-center justify-center transition";
+                    speakBtn.textContent = '🔊';
+                    speakBtn.title = 'Telaffuzu dinle';
+                    speakBtn.onclick = (e) => { e.stopPropagation(); speak(card.label); };
+                    cardFront.appendChild(speakBtn);
+                }
+
+                cardInner.appendChild(cardFront);
+                cardInner.appendChild(cardBack);
+                cardOuter.appendChild(cardInner);
+
+                cardInner.style.transform = "rotateY(180deg)";
+
+                cardOuter.onclick = () => handle3DCardFlipClick(index);
+                grid.appendChild(cardOuter);
+            });
+        }
+
+        function handle3DCardFlipClick(index) {
+            const card = matcherRoundWords[index];
+            const cardInner = document.getElementById(`matcher-card-inner-${index}`);
+
+            if (card.matched) return;
+            if (firstSelectedCard && firstSelectedCard.index === index) return;
+
+            cardInner.style.transform = "rotateY(0deg)";
+            playSound('select');
+
+            if (!firstSelectedCard) {
+                firstSelectedCard = { card: card, inner: cardInner, index: index };
+            } else {
+                const card2 = card;
+                const cardInner2 = cardInner;
+
+                if (firstSelectedCard.card.id === card2.id && firstSelectedCard.card.type !== card2.type) {
+                    card.matched = true;
+                    firstSelectedCard.card.matched = true;
+
+                    setTimeout(() => {
+                        playSound('success');
+                        
+                        firstSelectedCard.inner.firstElementChild.className = "card-front absolute inset-0 bg-gradient-to-tr from-emerald-400 to-teal-500 text-white rounded-3xl border-4 border-white flex items-center justify-center p-3 text-center font-bold text-xs md:text-sm shadow-lg pop-effect";
+                        cardInner2.firstElementChild.className = "card-front absolute inset-0 bg-gradient-to-tr from-emerald-400 to-teal-500 text-white rounded-3xl border-4 border-white flex items-center justify-center p-3 text-center font-bold text-xs md:text-sm shadow-lg pop-effect";
+
+                        matchedPairsCount++;
+                        matcherScore += 15;
+                        document.getElementById('matcher-score').textContent = `Skor: ${matcherScore}`;
+                        speak(card.id);
+                        grantXP(8);
+                        checkBadges();
+
+                        if (matchedPairsCount === 4) {
+                            setTimeout(() => {
+                                playSound('complete');
+                                launchConfetti(150);
+                                grantXP(20, false);
+                                grantStars(8);
+                                const matchSuccessModal = document.createElement('div');
+                                matchSuccessModal.className = "fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50";
+                                matchSuccessModal.innerHTML = `
+                                    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-xl">
+                                        <span class="text-5xl animate-bounce inline-block">🌟</span>
+                                        <h4 class="font-extrabold text-xl text-slate-800 brand-font">Mükemmel Eşleşme!</h4>
+                                        <p class="text-xs text-slate-500">MEB kelime kazanım haznesine 4 yeni kelime daha ekledin.</p>
+                                        <button onclick="this.closest('.fixed').remove(); resetMatcherRound();" class="w-full bg-gradient-to-r from-indigo-600 to-pink-500 text-white text-xs font-bold py-3 rounded-xl transition shadow">
+                                            Yeni Tura Başla 🔄
+                                        </button>
+                                    </div>
+                                `;
+                                document.body.appendChild(matchSuccessModal);
+                            }, 600);
+                        }
+                    }, 400);
+
+                } else {
+                    setTimeout(() => {
+                        playSound('error');
+                        firstSelectedCard.inner.firstElementChild.classList.add('border-rose-500', 'bg-rose-50', 'shake-effect');
+                        cardInner2.firstElementChild.classList.add('border-rose-500', 'bg-rose-50', 'shake-effect');
+
+                        setTimeout(() => {
+                            firstSelectedCard.inner.style.transform = "rotateY(180deg)";
+                            cardInner2.style.transform = "rotateY(180deg)";
+
+                            firstSelectedCard.inner.firstElementChild.classList.remove('border-rose-500', 'bg-rose-50', 'shake-effect');
+                            cardInner2.firstElementChild.classList.remove('border-rose-500', 'bg-rose-50', 'shake-effect');
+                        }, 800);
+                    }, 400);
+                }
+                firstSelectedCard = null;
+            }
+        }
+
+        function filterTeacherGrade(grade) {
+            teacherFilteredGrade = grade;
+
+            for (let g = 5; g <= 8; g++) {
+                const btn = document.getElementById(`btn-filter-${g}`);
+                if (btn) {
+                    if (g.toString() === grade) {
+                        btn.className = "bg-purple-600 text-white text-xs font-black px-3.5 py-1.5 rounded-xl transition shadow-md";
+                    } else {
+                        let colorClass = "bg-blue-100 text-blue-700 hover:bg-blue-200";
+                        if (g === 6) colorClass = "bg-teal-100 text-teal-700 hover:bg-teal-200";
+                        if (g === 7) colorClass = "bg-amber-100 text-amber-700 hover:bg-amber-200";
+                        if (g === 8) colorClass = "bg-purple-100 text-purple-700 hover:bg-purple-200";
+                        btn.className = `${colorClass} text-xs font-black px-3.5 py-1.5 rounded-xl transition`;
+                    }
+                }
+            }
+            playSound('select');
+            renderTeacherPanels();
+        }
+
+        function renderTeacherPanels() {
+            const headerTitle = document.getElementById('teacher-heatmap-title');
+            if (headerTitle) {
+                headerTitle.textContent = `${teacherFilteredGrade}. Sınıf Ünite Başarı Isı Haritası (Canlı Sınıf Verisi)`;
+            }
+
+            const tHead = document.getElementById('teacher-table-head');
+            const units = dynamicMEBDatabase[teacherFilteredGrade].units;
+            
+            let headHTML = `
+                <tr class="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold border-b border-slate-100">
+                    <th class="px-4 py-3.5 text-left">Öğrenci Adı & Kodları</th>
+            `;
+            units.forEach(u => {
+                headHTML += `<th class="px-4 py-3.5 text-center">${u.id.toUpperCase()}</th>`;
+            });
+            headHTML += `</tr>`;
+            if (tHead) tHead.innerHTML = headHTML;
+
+            const tbody = document.getElementById('teacher-heatmap-body');
+            if (tbody) {
+                tbody.innerHTML = '';
+                
+                const students = dynamicMEBDatabase[teacherFilteredGrade].students;
+                students.forEach(student => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-indigo-50/20 transition border-b border-slate-100";
+                    
+                    let tdContent = `
+                        <td class="px-4 py-3 text-left">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">${student.emoji || '👨‍🚀'}</span>
+                                <div>
+                                    <div class="font-bold text-slate-800 text-xs">${student.name}</div>
+                                    <div class="font-mono text-[10px] text-indigo-500">${student.code}</div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    
+                    student.scores.forEach(score => {
+                        let bgColor = 'bg-emerald-500 text-white';
+                        if (score <= 50) {
+                            bgColor = 'bg-rose-500 text-white animate-pulse';
+                        } else if (score <= 75) {
+                            bgColor = 'bg-amber-400 text-slate-800';
+                        }
+                        
+                        tdContent += `
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-block w-12 py-1.5 rounded-xl text-xs font-extrabold ${bgColor}">
+                                    %${score}
+                                </span>
+                            </td>
+                        `;
+                    });
+                    tr.innerHTML = tdContent;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            renderErrorBarCharts();
+            renderAIRecommendations();
+        }
+
+        function renderErrorBarCharts() {
+            const container = document.getElementById('error-bar-charts');
+            if (!container) return;
+            container.innerHTML = '';
+
+            let chartData = [];
+            if (teacherFilteredGrade === "5") {
+                chartData = [
+                    { title: "Zaman Edatı Karışıklığı (In/On/At)", rate: "35%", color: "bg-rose-500" },
+                    { title: "Diller & Ülkeler Farkı (Hello)", rate: "28%", color: "bg-amber-400" },
+                    { title: "Soru Yapıları & Yön Tarifi", rate: "20%", color: "bg-teal-500" }
+                ];
+            } else if (teacherFilteredGrade === "6") {
+                chartData = [
+                    { title: "Şimdiki Zaman & Karşılaştırmalar (Downtown)", rate: "39%", color: "bg-rose-500" },
+                    { title: "Miktar Belirteçleri (Some/Any - Yummy)", rate: "30%", color: "bg-amber-550" },
+                    { title: "Tarihler ve Günlük Aktiviteler (Life)", rate: "15%", color: "bg-emerald-500" }
+                ];
+            } else if (teacherFilteredGrade === "7") {
+                chartData = [
+                    { title: "Geçmiş Zaman Fiil Çekimleri (Biographies)", rate: "45%", color: "bg-rose-500" },
+                    { title: "Kişilik/Dış Görünüş Sıfatları (Appearance)", rate: "28%", color: "bg-amber-500" },
+                    { title: "Spor Yapıları & Can/Could", rate: "18%", color: "bg-teal-500" }
+                ];
+            } else {
+                chartData = [
+                    { title: "Kelime Sırası (Word Order - Friendship)", rate: "42%", color: "bg-rose-500" },
+                    { title: "Süreç Bağlaçları & Yemek Tarifi", rate: "31%", color: "bg-amber-500" },
+                    { title: "Kalıplaşmış Telefon İfadeleri", rate: "18%", color: "bg-indigo-500" }
+                ];
+            }
+
+            chartData.forEach(item => {
+                const wrapper = document.createElement('div');
+                wrapper.className = "space-y-1.5";
+                wrapper.innerHTML = `
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span class="text-slate-700">${item.title}</span>
+                        <span class="text-indigo-600 font-bold">${item.rate} Oran</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                        <div class="${item.color} h-full rounded-full" style="width: ${item.rate}"></div>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        function renderAIRecommendations() {
+            const container = document.getElementById('ai-recommends-box');
+            if (!container) return;
+            container.innerHTML = '';
+
+            let recommends = [];
+            if (teacherFilteredGrade === "5") {
+                recommends = [
+                    { badge: "KRİTİK BAŞLIK", title: "In/On/At Edatları Zorluyor", desc: "Sınıfın %35'i günlerden önce 'on' getirme kuralını kaçırıyor. Haftalık tekrar kartlarına zaman çizelgeleri eklenmiştir.", type: "red" },
+                    { badge: "TAVSİYE", title: "Karakter Sıfatları Karşılaştırması", desc: "Film türlerini içeren 'Movies' ünitesindeki sıfatlar için kelime avı kartlarını aktive etmeniz önerilir.", type: "indigo" }
+                ];
+            } else if (teacherFilteredGrade === "6") {
+                recommends = [
+                    { badge: "DİKKAT", title: "Şehir & Köy Karşılaştırmaları", desc: "Downtown ünitesinde 'Comparative' sıfat çekimleri (more/er) öğrencilerin %39'unda karıştırılıyor.", type: "red" },
+                    { badge: "İLERLEME", title: "Kahvaltı Ünitesi Başarısı", desc: "Sınıfın %70'i some/any ayrımını doğru kavrayarak haritayı yeşile çevirdi.", type: "green" }
+                ];
+            } else if (teacherFilteredGrade === "7") {
+                recommends = [
+                    { badge: "KRİTİK", title: "Düzensiz Fiiller (Past Simple)", desc: "Öğrenciler biyografi yazarken düzensiz fiillerin 2. hallerini (grew, wrote, did) karıştırıyor. Sık sık düzensiz fiil eşleştirmesi çözdürülmeli.", type: "red" },
+                    { badge: "ÖNERİ", title: "Görsel Sıfat Eşleştirme", desc: "Appearance & Personality ünitesinde zıt anlamlı kişilik sıfatları (lazy/hardworking, selfish/generous) için Matcher modülünü açın.", type: "indigo" }
+                ];
+            } else {
+                recommends = [
+                    { badge: "LGS KRİTİK", title: "Sıralama Zarfları (Kitchen)", desc: "En son yapılan denemelerde öğrencilerin %42'si tarif süreçlerinin sıralamasında (First, Next, Finally) hata yapmıştır.", type: "red" },
+                    { badge: "GELİŞİM RAPORU", title: "Telefon İfadeleri Başarısı", desc: "Öğrencilerin %85'i 'On the Phone' ünitesi kalıplarını başarıyla tamamladı.", type: "green" }
+                ];
+            }
+
+            recommends.forEach(item => {
+                let badgeStyle = "text-red-600 bg-red-50";
+                if (item.type === "indigo") badgeStyle = "text-indigo-600 bg-indigo-50";
+                if (item.type === "green") badgeStyle = "text-emerald-600 bg-emerald-50";
+
+                const card = document.createElement('div');
+                card.className = "bg-white/80 p-4 rounded-2xl border border-indigo-100 space-y-1.5 shadow-sm";
+                card.innerHTML = `
+                    <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full ${badgeStyle}">${item.badge}</span>
+                    <h4 class="text-xs font-black text-indigo-950">${item.title}</h4>
+                    <p class="text-slate-600 text-[11px] leading-relaxed">${item.desc}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function adjustMastery(amount) {
+            masteryScore = Math.max(0, Math.min(100, masteryScore + amount));
+            const headerMastery = document.getElementById('header-mastery');
+            if (headerMastery) {
+                headerMastery.textContent = masteryScore;
+            }
+        }
+
+        function quitGame() {
+            if (speedTimer) { clearInterval(speedTimer); speedTimer = null; }
+            isSpeedMode = false;
+            const timerEl = document.getElementById('speed-timer');
+            if (timerEl) timerEl.classList.add('hidden');
+            goToDashboard();
+        }
+
+        function switchView(viewId) {
+            document.getElementById('login-portal').classList.add('hidden');
+            document.getElementById('student-dashboard').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('word-matcher-screen').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.add('hidden');
+            
+            document.getElementById(viewId).classList.remove('hidden');
+
+            const navStudent = document.getElementById('nav-student');
+            const navTeacher = document.getElementById('nav-teacher');
+
+            if (viewId === 'student-dashboard' || viewId === 'game-screen' || viewId === 'word-matcher-screen') {
+                navStudent.className = "px-4 py-2 rounded-xl text-xs font-black transition bg-white text-indigo-700 shadow-md";
+                navTeacher.className = "px-4 py-2 rounded-xl text-xs font-black transition text-white hover:bg-white/10";
+            } else if (viewId === 'teacher-dashboard') {
+                navTeacher.className = "px-4 py-2 rounded-xl text-xs font-black transition bg-white text-indigo-700 shadow-md";
+                navStudent.className = "px-4 py-2 rounded-xl text-xs font-black transition text-white hover:bg-white/10";
+            }
+        }
+    </script>
+</body>
+</html>
