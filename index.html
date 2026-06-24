@@ -359,6 +359,8 @@
                         <span class="bg-yellow-100 text-yellow-800 font-black text-xs px-3 py-2 rounded-xl shadow-sm">⭐ <span id="header-stars">0</span> Yıldız</span>
                         <button onclick="openAvatarWorkshop()" class="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs px-4 py-2 rounded-xl shadow-md hover:scale-105 transition">🎨 Avatar Atölyesi</button>
                         <button onclick="startSpeedRound()" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-xs px-4 py-2 rounded-xl shadow-md hover:scale-105 transition">⏱️ Hız Turu</button>
+                        <button onclick="downloadStudentReportPNG()" class="bg-white border border-indigo-200 text-indigo-700 font-black text-xs px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-50 transition">📄 Karne İndir</button>
+                        <button onclick="downloadErrorAnalysisPNG()" class="bg-white border border-rose-200 text-rose-700 font-black text-xs px-4 py-2 rounded-xl shadow-sm hover:bg-rose-50 transition">📊 Hata Raporu İndir</button>
                     </div>
                 </div>
 
@@ -393,7 +395,7 @@
                     <div>
                         <h3 class="text-xl font-black text-slate-800 flex items-center space-x-2">
                             <span>🎯</span>
-                            <span>Müfredat Görev Haritan (Ünite Başına En Az 50 Soru!)</span>
+                            <span>Müfredat Görev Haritan (Ünite Başına 50+ Zenginleştirilmiş Soru)</span>
                         </h3>
                         <p class="text-xs text-slate-500">Milli Eğitim Bakanlığı müfredatına göre dinamik olarak açılan ve zenginleştirilmiş seviye haritanız.</p>
                     </div>
@@ -424,7 +426,7 @@
                 <div class="space-y-2">
                     <span class="bg-white/25 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">3D SESLİ ARCADE</span>
                     <h4 class="text-2xl font-black leading-tight">Yenilenen Vocabulary Matcher (Eşleştirme Oyunu)</h4>
-                    <p class="text-pink-100 text-xs max-w-xl">500+ MEB kelime kartı, tatlı ses efektleri ve pürüzsüz flip animasyonlarıyla kelimeleri gizli yerlerinden ortaya çıkar!</p>
+                    <p class="text-pink-100 text-xs max-w-xl">70+ kritik kelime kartı, 200 soruluk zengin içerik havuzu, sesli tekrar ve pürüzsüz flip animasyonlarıyla kelimeleri kalıcı öğren!</p>
                 </div>
                 <button onclick="startWordMatcher()" class="bg-white text-rose-600 hover:bg-rose-550 font-black text-xs py-3.5 px-6 rounded-2xl shadow-md transition whitespace-nowrap">
                     Mücadeleyi Başlat! ⚡
@@ -590,6 +592,10 @@
                     <div>
                         <h2 class="text-2xl font-black text-slate-800 brand-font">Müfredat Bazlı Öğretmen Analiz Paneli</h2>
                         <p class="text-slate-500 text-sm">Sınıflarınızın MEB 5, 6, 7 ve 8. sınıf üniteleri genelindeki başarı ve hata oranlarını canlı izleyin.</p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <button onclick="downloadErrorAnalysisPNG()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-black px-4 py-2 rounded-xl shadow-md transition">📊 Hata Analiz Raporu İndir</button>
+                            <button onclick="downloadClassCSV()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-4 py-2 rounded-xl shadow-md transition">⬇️ Sınıf CSV İndir</button>
+                        </div>
                     </div>
                     <!-- Sınıf filtreleyici -->
                     <div class="flex gap-2 flex-wrap">
@@ -633,6 +639,31 @@
                         <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="teacher-heatmap-body">
                             <!-- Dynamic Heatmap rows -->
                         </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Error Analysis Table -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between md:items-center gap-3">
+                    <div>
+                        <h3 class="font-black text-slate-800 text-base">Hata Analiz Tablosu</h3>
+                        <p class="text-xs text-slate-500">Öğrenci bazında en sık hata türü, toplam hata kaydı ve önerilen tekrar konusu.</p>
+                    </div>
+                    <span id="teacher-error-count-badge" class="text-xs bg-rose-100 text-rose-700 font-black px-3 py-1.5 rounded-xl">0 Hata Kaydı</span>
+                </div>
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl">
+                    <table class="min-w-full divide-y divide-slate-100 text-xs">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-black">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Öğrenci</th>
+                                <th class="px-4 py-3 text-center">Sınıf</th>
+                                <th class="px-4 py-3 text-left">En Sık Hata</th>
+                                <th class="px-4 py-3 text-center">Hata Kaydı</th>
+                                <th class="px-4 py-3 text-left">Öncelikli Tekrar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-error-table-body" class="divide-y divide-slate-100 text-slate-700 font-semibold"></tbody>
                     </table>
                 </div>
             </div>
@@ -1247,6 +1278,7 @@
                     payload[grade] = dynamicMEBDatabase[grade].students.map(s => ({
                         code: s.code, name: s.name, emoji: s.emoji,
                         scores: s.scores, streak: s.streak, mistakes: s.mistakes,
+                        errorLog: s.errorLog || [],
                         xp: s.xp || 0, badges: s.badges || [], bestCombo: s.bestCombo || 0,
                         stars: s.stars || 0, ownedAvatars: s.ownedAvatars || [],
                         demo: !!s.demo
@@ -1260,7 +1292,6 @@
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) {
-                    // mark seed students as demo for clean reset support
                     Object.keys(dynamicMEBDatabase).forEach(g =>
                         dynamicMEBDatabase[g].students.forEach(s => s.demo = true));
                     return;
@@ -1268,7 +1299,11 @@
                 const payload = JSON.parse(raw);
                 Object.keys(payload).forEach(grade => {
                     if (dynamicMEBDatabase[grade]) {
-                        dynamicMEBDatabase[grade].students = payload[grade].map(migrateStudent);
+                        const saved = payload[grade].map(migrateStudent);
+                        // Yeni sürümdeki zengin demo verileri tamamen kaybolmasın diye kayıtlı öğrencilerle birleştiriyoruz.
+                        const byCode = new Map(dynamicMEBDatabase[grade].students.map(s => [s.code, migrateStudent(s)]));
+                        saved.forEach(s => byCode.set(s.code, migrateStudent(s)));
+                        dynamicMEBDatabase[grade].students = Array.from(byCode.values());
                     }
                 });
             } catch (e) { /* corrupt save ignored */ }
@@ -1276,12 +1311,21 @@
 
         // Backward compatibility: old saves used "coins" and "collector" badge.
         function migrateStudent(s) {
+            if (!s) s = {};
             if (s.stars === undefined) s.stars = (s.coins !== undefined ? s.coins : 0);
             delete s.coins;
+            if (!Array.isArray(s.mistakes)) s.mistakes = [];
+            if (!Array.isArray(s.errorLog)) s.errorLog = [];
+            if (!Array.isArray(s.badges)) s.badges = [];
+            if (!Array.isArray(s.ownedAvatars)) s.ownedAvatars = s.emoji ? [s.emoji] : [];
             if (Array.isArray(s.badges) && s.badges.includes('collector')) {
                 s.badges = s.badges.filter(b => b !== 'collector');
                 if (!s.badges.includes('avatar_unlocker')) s.badges.push('avatar_unlocker');
             }
+            s.xp = s.xp || 0;
+            s.bestCombo = s.bestCombo || 0;
+            s.streak = s.streak || 0;
+            s.scores = Array.isArray(s.scores) ? s.scores : [];
             return s;
         }
 
@@ -1297,6 +1341,433 @@
             { emoji: "🐨", name: "Koala" },
             { emoji: "👽", name: "Uzaylı" }
         ];
+
+    // MEB MÜFREDATI UYUMLU KELİME DİZİNİ (70 KRİTİK KELİME - SEVİYE 1 İÇİN)
+    const wordDictionary = [
+        { eng: "environment", tr: "çevre", category: "Nature" },
+        { eng: "adventure", tr: "macera", category: "Fun" },
+        { eng: "opinion", tr: "fikir", category: "Chat" },
+        { eng: "science", tr: "bilim", category: "Science" },
+        { eng: "garbage", tr: "çöp", category: "Nature" },
+        { eng: "success", tr: "başarı", category: "School" },
+        { eng: "exhibition", tr: "sergi", category: "Art" },
+        { eng: "nature", tr: "doğa", category: "Nature" },
+        { eng: "generation", tr: "nesil", category: "People" },
+        { eng: "opportunity", tr: "fırsat", category: "General" },
+        { eng: "habit", tr: "alışkanlık", category: "General" },
+        { eng: "friendship", tr: "arkadaşlık", category: "People" },
+        { eng: "journey", tr: "yolculuk", category: "Travel" },
+        { eng: "danger", tr: "tehlike", category: "Safety" },
+        { eng: "health", tr: "sağlık", category: "Health" },
+        { eng: "pollution", tr: "kirlilik", category: "Nature" },
+        { eng: "source", tr: "kaynak", category: "Science" },
+        { eng: "dangerous", tr: "tehlikeli", category: "Safety" },
+        { eng: "important", tr: "önemli", category: "General" },
+        { eng: "necessary", tr: "gerekli", category: "General" },
+        { eng: "delicious", tr: "lezzetli", category: "Food" },
+        { eng: "boring", tr: "sıkıcı", category: "Fun" },
+        { eng: "exciting", tr: "heyecan verici", category: "Fun" },
+        { eng: "frightening", tr: "korkutucu", category: "Safety" },
+        { eng: "generous", tr: "cömert", category: "People" },
+        { eng: "honest", tr: "dürüst", category: "People" },
+        { eng: "stubborn", tr: "inatçı", category: "People" },
+        { eng: "careful", tr: "dikkatli", category: "Safety" },
+        { eng: "helpful", tr: "yardımsever", category: "People" },
+        { eng: "creative", tr: "yaratıcı", category: "Art" },
+        { eng: "anxious", tr: "endişeli", category: "Health" },
+        { eng: "cheerful", tr: "neşeli", category: "People" },
+        { eng: "healthy", tr: "sağlıklı", category: "Health" },
+        { eng: "crowded", tr: "kalabalık", category: "Travel" },
+        { eng: "ancient", tr: "antik", category: "Travel" },
+        { eng: "modern", tr: "modern", category: "Art" },
+        { eng: "polluted", tr: "kirli", category: "Nature" },
+        { eng: "protect", tr: "korumak", category: "Nature" },
+        { eng: "waste", tr: "israf etmek", category: "Nature" },
+        { eng: "save", tr: "tasarruf etmek", category: "Nature" },
+        { eng: "share", tr: "paylaşmak", category: "Chat" },
+        { eng: "understand", tr: "anlamak", category: "School" },
+        { eng: "remember", tr: "hatırlamak", category: "School" },
+        { eng: "forget", tr: "unutmak", category: "School" },
+        { eng: "explore", tr: "keşfetmek", category: "Travel" },
+        { eng: "solve", tr: "çözmek", category: "Science" },
+        { eng: "invent", tr: "icat etmek", category: "Science" },
+        { eng: "discover", tr: "keşfetmek", category: "Science" },
+        { eng: "design", tr: "tasarlamak", category: "Art" },
+        { eng: "destroy", tr: "yok etmek", category: "Nature" },
+        { eng: "prevent", tr: "önlemek", category: "Safety" },
+        { eng: "prepare", tr: "hazırlamak", category: "School" },
+        { eng: "attend", tr: "katılmak", category: "General" },
+        { eng: "refuse", tr: "reddetmek", category: "Chat" },
+        { eng: "accept", tr: "kabul etmek", category: "Chat" },
+        { eng: "improve", tr: "geliştirmek", category: "Science" },
+        { eng: "prefer", tr: "tercih etmek", category: "General" },
+        { eng: "experience", tr: "deneyim", category: "General" },
+        { eng: "reduce", tr: "azaltmak", category: "Nature" }, // Mükerrer protect yerine MEB uyumlu kelime
+        { eng: "disease", tr: "hastalık", category: "Health" },
+        { eng: "injury", tr: "yaralanma", category: "Health" },
+        { eng: "symptom", tr: "belirti", category: "Health" },
+        { eng: "medicine", tr: "ilaç", category: "Health" },
+        { eng: "treatment", tr: "tedavi", category: "Health" },
+        { eng: "vaccine", tr: "aşı", category: "Health" },
+        { eng: "nutrition", tr: "beslenme", category: "Health" },
+        { eng: "climate", tr: "iklim", category: "Nature" },
+        { eng: "species", tr: "türler", category: "Nature" },
+        { eng: "habitat", tr: "yaşam alanı", category: "Nature" },
+        { eng: "ecosystem", tr: "ekosistem", category: "Nature" }
+    ];
+
+    // DİNAMİK OLARAK 200 SORU ÜRETEN ALGORİTMA MOTORU
+    const gameDatabase = {
+        level1: [], // 70 Kelime Sorusu
+        level2: [], // 70 Cümle / Gramer Sorusu
+        level3: []  // 60 Diyalog Sorusu
+    };
+
+    function generateAllQuestions() {
+        // --- SEVİYE 1 ÜRETİMİ (70 Kelime Sorusu) ---
+        wordDictionary.forEach((item, index) => {
+            const isEngToTr = index % 2 === 0;
+            
+            // Yanıltıcı şıkları rastgele diğer kelimelerden seçerken Türkçe ve İngilizce karşılıklarının çakışmasını engelliyoruz
+            let distractors = wordDictionary
+                .filter(w => w.eng !== item.eng && w.tr !== item.tr)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 2);
+
+            let questionText = "";
+            let options = [];
+            
+            if (isEngToTr) {
+                questionText = `What is the Turkish meaning of the word "${item.eng}"?`;
+                options = [
+                    { text: item.tr, isCorrect: true, type: "Doğru Yapı", why: `Harika! "${item.eng}" kelimesinin Türkçe karşılığı tam olarak "${item.tr}" şeklindedir.`, rule: "Kelime Dağarcığı: Yeni kelimeleri düzenli tekrar ederek öğrenmek hafızayı güçlendirir." },
+                    { text: distractors[0].tr, isCorrect: false, type: "Kelime Karışıklığı", why: `Hatalı Eşleştirme! "${distractors[0].eng}" kelimesi "${distractors[0].tr}" anlamına gelir.`, rule: "Kelime Bilgisi: Benzer yazılışlı veya farklı kategorideki kelimelerin anlamlarını kartlarla çalışabilirsin." },
+                    { text: distractors[1].tr, isCorrect: false, type: "Kelime Karışıklığı", why: `Dikkat et! "${distractors[1].eng}" kelimesinin anlamı "${distractors[1].tr}" kelimesidir.`, rule: "Öneri: Kelimeyi bir cümlede kullanarak anlamını kalıcı hale getirebilirsin." }
+                ];
+            } else {
+                questionText = `"${item.tr}" kelimesinin İngilizce karşılığı hangisidir?`;
+                options = [
+                    { text: item.eng, isCorrect: true, type: "Doğru Yapı", why: `Süper! "${item.tr}" kelimesinin İngilizce yazılışı "${item.eng}" olarak belirlenmiştir.`, rule: "Yazım Kuralları: İngilizce kelimelerin yazılışına ve telaffuzuna odaklanmak kulak aşinalığını artırır." },
+                    { text: distractors[0].eng, isCorrect: false, type: "Kelime Karışıklığı", why: `Maalesef yanlış. "${distractors[0].eng}" kelimesinin Türkçe karşılığı "${distractors[0].tr}" şeklindedir.`, rule: "Kelime Kartları: Kelime eşleştirmeleri yaparken kelimenin türüne (isim, fiil, sıfat) dikkat edebilirsin." },
+                    { text: distractors[1].eng, isCorrect: false, type: "Kelime Karışıklığı", why: `Yanlış şık! "${distractors[1].eng}" kelimesi Türkçe'de "${distractors[1].tr}" demektir.`, rule: "Öğrenme İpucu: Kelime defteri tutmak, benzer kelimelerin birbirine karışmasını engeller." }
+                ];
+            }
+
+            // Seçenekleri karıştır
+            options.sort(() => 0.5 - Math.random());
+
+            gameDatabase.level1.push({
+                id: index + 1,
+                question: questionText,
+                illustration: item.category, // Kategori bazlı illüstrasyon eşleştirmesi
+                options: options
+            });
+        });
+
+        // --- SEVİYE 2 ÜRETİMİ (70 Cümle / Gramer Sorusu) ---
+        const grammarTemplates = [
+            {
+                focus: "Present Simple (Geniş Zaman - Özne/Yüklem)",
+                rule: "Geniş zamanda (Present Simple) 'He, She, It' özneleriyle fiilin sonuna '-s, -es, -ies' takılarından biri gelir.",
+                variants: [
+                    { sub: "She", verb_ok: "goes", verb_err1: "go", verb_err2: "going", obj: "to school every day" },
+                    { sub: "He", verb_ok: "plays", verb_err1: "play", verb_err2: "playing", obj: "basketball on weekends" },
+                    { sub: "My mother", verb_ok: "prepares", verb_err1: "prepare", verb_err2: "preparing", obj: "delicious breakfast in the morning" },
+                    { sub: "The dog", verb_ok: "barks", verb_err1: "bark", verb_err2: "barking", obj: "at strangers loudy" },
+                    { sub: "Ergo", verb_ok: "explores", verb_err1: "explore", verb_err2: "exploring", obj: "new planets with his rocket" },
+                    { sub: "She", verb_ok: "remembers", verb_err1: "remember", verb_err2: "remembering", obj: "all the vocabulary rules" },
+                    { sub: "He", verb_ok: "helps", verb_err1: "help", verb_err2: "helping", obj: "his friends with their science projects" }
+                ]
+            },
+            {
+                focus: "Present Continuous (Şimdiki Zaman)",
+                rule: "Şimdiki zamanda (Present Continuous) 'am/is/are' yardımcı fiili ile ana fiile eklenen '-ing' eki birlikte kullanılır.",
+                variants: [
+                    { sub: "Look! They", verb_ok: "are playing", verb_err1: "is playing", verb_err2: "play", obj: "in the garden right now" },
+                    { sub: "Listen! She", verb_ok: "is singing", verb_err1: "are singing", verb_err2: "sings", obj: "a beautiful song" },
+                    { sub: "Currently, we", verb_ok: "are saving", verb_err1: "is saving", verb_err2: "save", obj: "water to protect our nature" },
+                    { sub: "My friend", verb_ok: "is cleaning", verb_err1: "are cleaning", verb_err2: "clean", obj: "his room at the moment" },
+                    { sub: "The scientists", verb_ok: "are discovering", verb_err1: "is discovering", verb_err2: "discover", obj: "new species in the forest today" },
+                    { sub: "At present, I", verb_ok: "am preparing", verb_err1: "is preparing", verb_err2: "prepare", obj: "for my English exams" },
+                    { sub: "Look! The cat", verb_ok: "is sleeping", verb_err1: "are sleeping", verb_err2: "sleeps", obj: "on the comfortable sofa" }
+                ]
+            },
+            {
+                focus: "Past Simple Regular (Geçmiş Zaman - Düzenli Fiiller)",
+                rule: "Geçmiş zamanda (Past Simple) kurallı eylemleri belirtirken fiillerin sonuna '-ed' takısı getirilir.",
+                variants: [
+                    { sub: "Yesterday, I", verb_ok: "attended", verb_err1: "attend", verb_err2: "attending", obj: "the science exhibition at school" },
+                    { sub: "Last week, we", verb_ok: "prepared", verb_err1: "prepare", verb_err2: "preparing", obj: "a great surprise for our teacher" },
+                    { sub: "Two days ago, she", verb_ok: "visited", verb_err1: "visit", verb_err2: "visits", obj: "the ancient city museum" },
+                    { sub: "They", verb_ok: "protected", verb_err1: "protect", verb_err2: "protecting", obj: "the forest from fire last summer" },
+                    { sub: "The engineer", verb_ok: "designed", verb_err1: "design", verb_err2: "designs", obj: "a new environment project yesterday" },
+                    { sub: "I", verb_ok: "remembered", verb_err1: "remember", verb_err2: "remembering", obj: "the answer to the question last night" },
+                    { sub: "We", verb_ok: "cleaned", verb_err1: "clean", verb_err2: "cleaning", obj: "the school garden on Saturday" }
+                ]
+            },
+            {
+                focus: "Past Simple Irregular (Geçmiş Zaman - Düzensiz Fiiller)",
+                rule: "Düzensiz fiiller geçmiş zamanda (Past Simple) tamamen değişir, sonlarına '-ed' takısı almazlar.",
+                variants: [
+                    { sub: "Yesterday, we", verb_ok: "went", verb_err1: "goed", verb_err2: "gone", obj: "to the library to study together" },
+                    { sub: "Last night, he", verb_ok: "wrote", verb_err1: "writed", verb_err2: "write", obj: "a very creative story" },
+                    { sub: "I", verb_ok: "lost", verb_err1: "losed", verb_err2: "lose", obj: "my favorite vocabulary book last weekend" },
+                    { sub: "They", verb_ok: "bought", verb_err1: "buyed", verb_err2: "buys", obj: "a healthy breakfast from the market this morning" },
+                    { sub: "She", verb_ok: "understood", verb_err1: "understanded", verb_err2: "understands", obj: "the difficult grammar rule instantly" },
+                    { sub: "Last summer, I", verb_ok: "ate", verb_err1: "eated", verb_err2: "eaten", obj: "delicious traditional food in Trabzon" },
+                    { sub: "We", verb_ok: "saw", verb_err1: "seed", verb_err2: "see", obj: "many dangerous species in the wild safari" }
+                ]
+            },
+            {
+                focus: "Comparative Adjectives (Karşılaştırma)",
+                rule: "Kısa sıfatları karşılaştırırken sıfatın sonuna '-er' takısı eklenir ve ardından 'than' yapısı kullanılır.",
+                variants: [
+                    { sub: "An elephant is", verb_ok: "bigger than", verb_err1: "more big than", verb_err2: "big than", obj: "a tiny mouse" },
+                    { sub: "This journey is", verb_ok: "faster than", verb_err1: "more fast than", verb_err2: "fast than", obj: "the previous one" },
+                    { sub: "City life is usually", verb_ok: "noisier than", verb_err1: "more noisy than", verb_err2: "noisy than", obj: "country life" },
+                    { sub: "The weather today is", verb_ok: "warmer than", verb_err1: "more warm than", verb_err2: "warm than", obj: "yesterday" },
+                    { sub: "My grades are", verb_ok: "better than", verb_err1: "gooder than", verb_err2: "more good than", obj: "last term's grades" },
+                    { sub: "A cheetah is", verb_ok: "faster than", verb_err1: "fast than", verb_err2: "more faster than", obj: "a slow turtle" },
+                    { sub: "This book is", verb_ok: "heavier than", verb_err1: "more heavy than", verb_err2: "heavy than", obj: "that lightweight paper" }
+                ]
+            },
+            {
+                focus: "Superlative Adjectives (En Üstünlük Derecesi)",
+                rule: "Kısa sıfatlarla en üstünlük belirtirken sıfatın önüne 'the' konulur ve sonuna '-est' takısı getirilir.",
+                variants: [
+                    { sub: "Mount Everest is the", verb_ok: "highest", verb_err1: "most high", verb_err2: "higher", obj: "mountain on Earth" },
+                    { sub: "She is the", verb_ok: "smartest", verb_err1: "most smart", verb_err2: "smarter", obj: "student in our school class" },
+                    { sub: "This is the", verb_ok: "most dangerous", verb_err1: "dangerousest", verb_err2: "more dangerous", obj: "species in the world" },
+                    { sub: "Yesterday was the", verb_ok: "hottest", verb_err1: "most hot", verb_err2: "hotter", obj: "day of this summer" },
+                    { sub: "Learning English is the", verb_ok: "most exciting", verb_err1: "excitingest", verb_err2: "more exciting", obj: "adventure for me" },
+                    { sub: "Our school has the", verb_ok: "biggest", verb_err1: "most big", verb_err2: "bigger", obj: "garden in this district" },
+                    { sub: "This is the", verb_ok: "worst", verb_err1: "badest", verb_err2: "most bad", obj: "pollution I have ever seen" }
+                ]
+            },
+            {
+                focus: "Quantifiers (Miktar Belirteçleri)",
+                rule: "Sayılamayan isimlerle (water, money, sugar) 'much/some/a little' kullanılırken; sayılabilenlerle (books, apples, friends) 'many/a few' kullanılır.",
+                variants: [
+                    { sub: "I don't have", verb_ok: "many", verb_err1: "much", verb_err2: "a little", obj: "friends in this new neighborhood" },
+                    { sub: "There is only", verb_ok: "a little", verb_err1: "a few", verb_err2: "many", obj: "sugar left in the box" },
+                    { sub: "How", verb_ok: "much", verb_err1: "many", verb_err2: "few", obj: "money do we need for this space trip?" },
+                    { sub: "Are there", verb_ok: "any", verb_err1: "some", verb_err2: "a little", obj: "species of animals in the zoo?" },
+                    { sub: "We have", verb_ok: "a few", verb_err1: "a little", verb_err2: "much", obj: "minutes before the rocket launches" },
+                    { sub: "She drank", verb_ok: "some", verb_err1: "many", verb_err2: "any", obj: "healthy fruit juice for energy" },
+                    { sub: "There isn't", verb_ok: "any", verb_err1: "some", verb_err2: "many", obj: "garbage on the classroom floor" }
+                ]
+            },
+            {
+                focus: "Future Tense (Gelecek Zaman - Planlar)",
+                rule: "Önceden planlanmış, kararı verilmiş ve hazırlığı yapılmış durumlar için gelecek zamanda 'be going to' yapısı kullanılır.",
+                variants: [
+                    { sub: "We bought our tickets. We", verb_ok: "are going to fly", verb_err1: "will fly", verb_err2: "fly", obj: "to London next Tuesday" },
+                    { sub: "She has the project file. She", verb_ok: "is going to present", verb_err1: "present", verb_err2: "presents", obj: "it to the class soon" },
+                    { sub: "They have a map. They", verb_ok: "are going to explore", verb_err1: "will explore", verb_err2: "explores", obj: "the ancient valley" },
+                    { sub: "I bought a gym card. I", verb_ok: "am going to exercise", verb_err1: "exercises", verb_err2: "exercised", obj: "every day to stay healthy" },
+                    { sub: "The team prepared the project. They", verb_ok: "are going to test", verb_err1: "tests", verb_err2: "will test", obj: "it tomorrow" },
+                    { sub: "He cleaned his backpack. He", verb_ok: "is going to join", verb_err1: "joins", verb_err2: "will join", obj: "the camp journey" },
+                    { sub: "We collected all the materials. We", verb_ok: "are going to build", verb_err1: "builds", verb_err2: "built", obj: "the project robot" }
+                ]
+            },
+            {
+                focus: "Modal Verbs (Yükümlülük & Yasaklama)",
+                rule: "Zorunluluk ve kuralları ifade ederken 'must', yasakları ifade ederken 'mustn't' kullanılır.",
+                variants: [
+                    { sub: "You", verb_ok: "must", verb_err1: "mustn't", verb_err2: "don't have to", obj: "protect the environment from pollution" },
+                    { sub: "We", verb_ok: "mustn't", verb_err1: "must", verb_err2: "have to", obj: "waste our fresh water sources" },
+                    { sub: "Students", verb_ok: "must", verb_err1: "mustn't", verb_err2: "shouldn't", obj: "listen carefully to their teacher" },
+                    { sub: "You", verb_ok: "mustn't", verb_err1: "must", verb_err2: "don't have to", obj: "throw garbage around on the floor" },
+                    { sub: "We", verb_ok: "must", verb_err1: "mustn't", verb_err2: "doesn't have to", obj: "save energy by turning off the lights" },
+                    { sub: "Drivers", verb_ok: "must", verb_err1: "mustn't", verb_err2: "shouldn't", obj: "stop when the traffic light turns red" },
+                    { sub: "You", verb_ok: "mustn't", verb_err1: "must", verb_err2: "have to", obj: "make loud noise in the quiet library" }
+                ]
+            },
+            {
+                focus: "Conjunctions (Bağlaçlar)",
+                rule: "Farklı cümleleri bağlarken sebep-sonuç için 'because', zıtlıklar için 'but', sonuçlar için 'so' kullanılır.",
+                variants: [
+                    { sub: "I stayed at home", verb_ok: "because", verb_err1: "but", verb_err2: "so", obj: "it was raining outside heavily" },
+                    { sub: "She worked very hard,", verb_ok: "but", verb_err1: "because", verb_err2: "so", obj: "she couldn't complete the exam in time" },
+                    { sub: "He didn't sleep well,", verb_ok: "so", verb_err1: "because", verb_err2: "but", obj: "he feels very tired and anxious today" },
+                    { sub: "We prefer healthy food", verb_ok: "because", verb_err1: "but", verb_err2: "so", obj: "we want to live longer and stronger" },
+                    { sub: "The project was great,", verb_ok: "but", verb_err1: "because", verb_err2: "so", obj: "the teacher asked some hard questions" },
+                    { sub: "I was very thirsty,", verb_ok: "so", verb_err1: "because", verb_err2: "but", obj: "I drank two glasses of cold water" },
+                    { sub: "She likes adventure tourism", verb_ok: "because", verb_err1: "but", verb_err2: "so", obj: "it is extremely exciting" }
+                ]
+            }
+        ];
+
+        // Şablonları döngüye sokup 70 adet Seviye 2 sorusu doldur
+        let l2Count = 1;
+        grammarTemplates.forEach(t => {
+            t.variants.forEach(v => {
+                const questionText = `${v.sub} ______ ${v.obj}.`;
+                
+                let options = [
+                    { text: v.verb_ok, isCorrect: true, type: "Doğru Yapı", why: `Mükemmel! Cümlenin doğru tamamlanışı "${v.verb_ok}" kelimesidir.`, rule: t.rule },
+                    { text: v.verb_err1, isCorrect: false, type: t.focus, why: `Küçük bir hata! "${v.verb_err1}" seçeneği buradaki dil bilgisi kuralına uymuyor.`, rule: t.rule },
+                    { text: v.verb_err2, isCorrect: false, type: t.focus, why: `Yanlış eşleştirme! "${v.verb_err2}" kullanımı cümlenin yapısını bozmaktadır.`, rule: t.rule }
+                ];
+
+                options.sort(() => 0.5 - Math.random());
+
+                gameDatabase.level2.push({
+                    id: l2Count++,
+                    question: questionText,
+                    illustration: "Grammar",
+                    options: options
+                });
+            });
+        });
+
+        // --- SEVİYE 3 ÜRETİMİ (60 Diyalog Sorusu) ---
+        const dialogueTemplates = [
+            {
+                focus: "Accepting / Refusing Offers (Kabul/Red)",
+                rule: "Bir daveti kibarca reddederken 'I'd love to, but...' (Çok isterdim ama...) yapısı kullanılır.",
+                variants: [
+                    { speaker: "A: Would you like to come to my party tonight?", ans_ok: "I'd love to, but I must study.", ans_err1: "No, never.", ans_err2: "Sure, I am sleeping." },
+                    { speaker: "A: Shall we explore the ancient castle together?", ans_ok: "That sounds exciting! Let's go.", ans_err1: "Yes, I attended yesterday.", ans_err2: "No, it is important." },
+                    { speaker: "A: Do you want some healthy fruit salad?", ans_ok: "Yes, please. I am hungry.", ans_err1: "No, I am honest.", ans_err2: "I prepared it last night." },
+                    { speaker: "A: Why don't we clean the local park today?", ans_ok: "That is a great idea!", ans_err1: "Because it is far.", ans_err2: "I refuse your success." },
+                    { speaker: "A: Would you like to play computer games with me?", ans_ok: "I'm sorry, I can't. I have chores.", ans_err1: "Yes, I was stuborn.", ans_err2: "Sure, it is boring." },
+                    { speaker: "A: Let's join the science class exhibition!", ans_ok: "Sure, I'd love to.", ans_err1: "No, I didn't remember.", ans_err2: "Why did you invent it?" }
+                ]
+            },
+            {
+                focus: "Asking for Opinion (Fikir Sorma)",
+                rule: "Birinin bir konu hakkındaki görüşünü alırken 'What do you think about...?' (Hakkında ne düşünüyorsun?) sorusu kalıptır.",
+                variants: [
+                    { speaker: "A: ______ do you think about climate change?", ans_ok: "What", ans_err1: "How", ans_err2: "Which" },
+                    { speaker: "A: ______ is your opinion on global warming?", ans_ok: "What", ans_err1: "Where", ans_err2: "Who" },
+                    { speaker: "A: ______ do you feel about our team's project?", ans_ok: "How", ans_err1: "What", ans_err2: "Why" },
+                    { speaker: "A: Do you agree that save energy is necessary?", ans_ok: "Yes, absolutely.", ans_err1: "Because it is difficult.", ans_err2: "No, I was at school." },
+                    { speaker: "A: In my opinion, adventure tourism is dangerous.", ans_ok: "I disagree. It is very safe.", ans_err1: "So I attended it.", ans_err2: "Yes, I saw it yesterday." },
+                    { speaker: "A: ______ do you prefer? City life or country life?", ans_ok: "Which", ans_err1: "When", ans_err2: "How many" }
+                ]
+            },
+            {
+                focus: "Asking for Directions (Yol Tarifi)",
+                rule: "Yol tarifi alırken 'Excuse me, how can I get to...?' (Affedersiniz, şuraya nasıl gidebilirim?) kalıbı kullanılır.",
+                variants: [
+                    { speaker: "A: Excuse me, how can I get to the museum?", ans_ok: "Go straight ahead and turn left.", ans_err1: "Yes, please. It is ancient.", ans_err2: "No, thank you." },
+                    { speaker: "A: Is there a science laboratory near here?", ans_ok: "Yes, it is opposite the school.", ans_err1: "No, I didn't solve it.", ans_err2: "Sure, you must go there." },
+                    { speaker: "A: Where is the nearest recycling center?", ans_ok: "It's next to the library.", ans_err1: "I recycle my garbage.", ans_err2: "No, I prefer environment." },
+                    { speaker: "A: How do I find the rocket station?", ans_ok: "Walk through this corridor.", ans_err1: "The rocket is blue.", ans_err2: "I have no experience." },
+                    { speaker: "A: Is the hospital far away from this park?", ans_ok: "No, it's just a ten-minute walk.", ans_err1: "Yes, I attended yesterday.", ans_err2: "I am very healthy." },
+                    { speaker: "A: Excuse me, can you tell me the way to Trabzon?", ans_ok: "Sure, take the highway.", ans_err1: "I visited it last summer.", ans_err2: "Trabzon is crowded." }
+                ]
+            },
+            {
+                focus: "Present Perfect vs Past Simple (Deneyimler)",
+                rule: "Genel yaşam deneyimleri Present Perfect ile sorulurken, eylemin ne zaman yapıldığı belirtiliyorsa Past Simple kullanılır.",
+                variants: [
+                    { speaker: "A: Have you ever eaten sushi? B: Yes, I ______ it last year in Tokyo.", ans_ok: "ate", ans_err1: "have eaten", ans_err2: "eat" },
+                    { speaker: "A: Have you completed the science project? B: Yes, I ______ it yesterday.", ans_ok: "finished", ans_err1: "have finished", ans_err2: "finish" },
+                    { speaker: "A: Have they ever designed a rocket? B: Yes, they ______ one in 2024.", ans_ok: "built", ans_err1: "have built", ans_err2: "build" },
+                    { speaker: "A: Have you seen the new exhibition? B: No, I ______ there yet.", ans_ok: "haven't been", ans_err1: "didn't go", ans_err2: "don't go" },
+                    { speaker: "A: Where did you go last summer? B: I ______ Trabzon.", ans_ok: "visited", ans_err1: "have visited", ans_err2: "visit" },
+                    { speaker: "A: Did they save the lost animals? B: Yes, they ______ them on Saturday.", ans_ok: "saved", ans_err1: "have saved", ans_err2: "save" }
+                ]
+            },
+            {
+                focus: "Making Offers & Requests (Teklif ve Rica)",
+                rule: "Birinden yardım isterken veya yardım teklif ederken 'Shall I / Can you / Would you like me to...' kalıpları kullanılır.",
+                variants: [
+                    { speaker: "A: This bag is very heavy. B: ______ I help you carry it?", ans_ok: "Shall", ans_err1: "Will", ans_err2: "Do" },
+                    { speaker: "A: I don't understand this grammar rule. B: ______ you explain it, please?", ans_ok: "Can", ans_err1: "Shall", ans_err2: "Must" },
+                    { speaker: "A: We need to design a poster. B: ______ we work together?", ans_ok: "Shall", ans_err1: "Must", ans_err2: "Do" },
+                    { speaker: "A: Can you give me the garbage bag, please?", ans_ok: "Sure, here you are.", ans_err1: "No, I am preparing it.", ans_err2: "Yes, I did yesterday." },
+                    { speaker: "A: Would you like me to clean the room?", ans_ok: "Yes, that would be very helpful.", ans_err1: "No, I am stubborn.", ans_err2: "Sure, it is boring." },
+                    { speaker: "A: May I ask a question about the vaccine?", ans_ok: "Of course, go ahead.", ans_err1: "Yes, I was sick.", ans_err2: "No, you must prepare." }
+                ]
+            },
+            {
+                focus: "Preferences & Choices (Tercihler)",
+                rule: "Tercihlerimizi belirtirken 'prefer doing something to doing something else' yapısını veya 'prefer noun to noun' tercih ederiz.",
+                variants: [
+                    { speaker: "A: Do you prefer coffee or tea? B: I prefer tea ______ coffee.", ans_ok: "to", ans_err1: "than", ans_err2: "from" },
+                    { speaker: "A: Do you prefer city life or country life? B: I prefer country life because it is ______.", ans_ok: "quieter", ans_err1: "more quiet", ans_err2: "quiet" },
+                    { speaker: "A: Why do you prefer adventure tourism? B: Because I love ______ activities.", ans_ok: "exciting", ans_err1: "boring", ans_err2: "frightening" },
+                    { speaker: "A: Do you prefer walking or cycling? B: I prefer cycling to ______.", ans_ok: "walking", ans_err1: "walk", ans_err2: "walked" },
+                    { speaker: "A: I prefer saving water ______ wasting it.", ans_ok: "to", ans_err1: "than", ans_err2: "from" },
+                    { speaker: "A: Which one do you prefer? Science or Art?", ans_ok: "I prefer Science because I love experiments.", ans_err1: "I preferred it yesterday.", ans_err2: "Art is more beautiful than Science." }
+                ]
+            },
+            {
+                focus: "Asking for Explanations (Açıklama İsteme)",
+                rule: "Sebep sorarken 'Why' (Neden), açıklama isterken 'What do you mean' (Ne demek istiyorsun) kalıpları kullanılır.",
+                variants: [
+                    { speaker: "A: We must turn off the lights. B: ______?", ans_ok: "Why should we do that", ans_err1: "When did we do that", ans_err2: "How much are they" },
+                    { speaker: "A: This habitat is in danger. B: What do you ______ by that?", ans_ok: "mean", ans_err1: "say", ans_err2: "think" },
+                    { speaker: "A: Why is Trabzon so popular? B: ______ it has historical places.", ans_ok: "Because", ans_err1: "But", ans_err2: "So" },
+                    { speaker: "A: What does 'recycle' mean? B: It ______ processing old items.", ans_ok: "means", ans_err1: "meaned", ans_err2: "meaning" },
+                    { speaker: "A: Why didn't you attend the meeting?", ans_ok: "Because I was preparing for the exam.", ans_err1: "Yes, I did yesterday.", ans_err2: "No, I refuse it." },
+                    { speaker: "A: How did you solve this hard problem?", ans_ok: "By working together as a team.", ans_err1: "Yes, it was necessary.", ans_err2: "No, it was crowded." }
+                ]
+            },
+            {
+                focus: "Weather & Emotions (Hava ve Duygular)",
+                rule: "Hava durumunun duygularımız üzerindeki etkilerini belirtirken sebep-sonuç bağlaçları kullanılır.",
+                variants: [
+                    { speaker: "A: How is the weather today? B: It is rainy, ______ I feel gloomy.", ans_ok: "so", ans_err1: "because", ans_err2: "but" },
+                    { speaker: "A: Does sunny weather make you happy? B: Yes, it ______ makes me cheerful.", ans_ok: "always", ans_err1: "never", ans_err2: "any" },
+                    { speaker: "A: Why are you feeling anxious? B: Because the storm is ______.", ans_ok: "frightening", ans_err1: "exciting", ans_err2: "delicious" },
+                    { speaker: "A: What is the weather like in winter?", ans_ok: "It is snowy and very cold.", ans_err1: "Yes, I like snow.", ans_err2: "I played snowball yesterday." },
+                    { speaker: "A: How do they feel on hot summer days?", ans_ok: "They feel energetic and happy.", ans_err1: "They feel cold.", ans_err2: "Yes, they preferred it." },
+                    { speaker: "A: The weather is cloudy. B: Let's stay home ______ it rains.", ans_ok: "in case", ans_err1: "but", ans_err2: "although" }
+                ]
+            },
+            {
+                focus: "Daily Routines & Chores (Günlük İşler)",
+                rule: "Günlük rutinlerden bahsederken sıklık zarfları (always, usually, never) özne ile fiil arasında yer alır.",
+                variants: [
+                    { speaker: "A: Do you wash the dishes? B: No, I ______ do that.", ans_ok: "never", ans_err1: "always", ans_err2: "any" },
+                    { speaker: "A: Who is responsible for the laundry? B: My mother ______ does it.", ans_ok: "usually", ans_err1: "yet", ans_err2: "ever" },
+                    { speaker: "A: Do you set the table? B: Yes, I ______ help my family.", ans_ok: "always", ans_err1: "any", ans_err2: "never" },
+                    { speaker: "A: How often do you clean the garden?", ans_ok: "Once a week on Saturdays.", ans_err1: "Yes, I clean it.", ans_err2: "I did it yesterday." },
+                    { speaker: "A: Who prepares the lunch? B: My father cooks delicious meals.", ans_ok: "My father", ans_err1: "Yes, he is", ans_err2: "Because he likes it" },
+                    { speaker: "A: Is dusting the shelves boring?", ans_ok: "Yes, I hate doing it.", ans_err1: "No, I attended it.", ans_err2: "Yes, it is necessary." }
+                ]
+            },
+            {
+                focus: "Describing People & Friends (Karakter Özellikleri)",
+                rule: "İnsanların fiziksel ve kişisel özelliklerini tarif ederken sıfatlardan yararlanırız.",
+                variants: [
+                    { speaker: "A: Why do you love Mary? B: Because she is very ______.", ans_ok: "helpful and honest", ans_err1: "stubborn and lazy", ans_err2: "selfish and boring" },
+                    { speaker: "A: What is your best friend like? B: He is ______ and always shares.", ans_ok: "generous", ans_err1: "stubborn", ans_err2: "anxious" },
+                    { speaker: "A: Is your brother stubborn?", ans_ok: "Yes, he never changes his mind.", ans_err1: "Yes, he is very generous.", ans_err2: "No, he forgets everything." },
+                    { speaker: "A: What does she look like? B: She is ______ and has blue eyes.", ans_ok: "tall and slim", ans_err1: "cheerful and helpful", ans_err2: "honest and polite" },
+                    { speaker: "A: Why is Sally so popular at school?", ans_ok: "Because she is very cheerful.", ans_err1: "Because she is anxious.", ans_err2: "No, she is not." },
+                    { speaker: "A: Friendships are important ______ they make us happy.", ans_ok: "because", ans_err1: "but", ans_err2: "so" }
+                ]
+            }
+        ];
+
+        // Şablonları döngüye sokup 60 adet Seviye 3 sorusu doldur
+        let l3Count = 1;
+        dialogueTemplates.forEach(t => {
+            t.variants.forEach(v => {
+                let options = [
+                    { text: v.ans_ok, isCorrect: true, type: "Doğru Yapı", why: "Süper! Diyaloğun akışına ve anlamına en uygun cevap budur.", rule: t.rule },
+                    { text: v.ans_err1, isCorrect: false, type: t.focus, why: "Maalesef diyalog bütünlüğünü veya dil bilgisi uyumunu bozuyor.", rule: t.rule },
+                    { text: v.ans_err2, isCorrect: false, type: t.focus, why: "Hatalı şık! Verilen cevap durumun gerektirdiği anlama uymamaktadır.", rule: t.rule }
+                ];
+
+                options.sort(() => 0.5 - Math.random());
+
+                gameDatabase.level3.push({
+                    id: l3Count++,
+                    question: v.speaker,
+                    illustration: "Chat",
+                    options: options
+                });
+            });
+        });
+    }
+
+
 
         const dynamicMEBDatabase = {
             5: {
@@ -1395,267 +1866,218 @@
         };
 
         function expandMEBDatabase() {
-            const countries = ["Germany", "France", "Spain", "Italy", "Japan", "Brazil", "Turkey", "Canada", "Korea", "Egypt"];
-            const languages = ["German", "French", "Spanish", "Italian", "Japanese", "Portuguese", "Turkish", "English", "Korean", "Arabic"];
-            const nationalities = ["German", "French", "Spanish", "Italian", "Japanese", "Brazilian", "Turkish", "Canadian", "Korean", "Egyptian"];
-            const schoolSubjects = ["maths", "science", "geography", "history", "english", "art", "music", "physical education", "social studies", "it"];
-            
-            const places = ["bakery", "library", "pharmacy", "hospital", "museum", "school", "park", "bank", "cafe", "station"];
-            const prepositions = ["between", "next to", "behind", "in front of", "opposite", "near", "under", "on"];
-            
-            const regularVerbs = ["played", "watched", "cooked", "brushed", "visited", "cleaned", "studied", "worked", "helped", "started"];
-            const irregularVerbs = [
-                { v1: "go", v2: "went" }, { v1: "see", v2: "saw" }, { v1: "grow", v2: "grew" },
-                { v1: "buy", v2: "bought" }, { v1: "write", v2: "wrote" }, { v1: "speak", v2: "spoke" },
-                { v1: "have", v2: "had" }, { v1: "drink", v2: "drank" }, { v1: "eat", v2: "ate" }
-            ];
+            // 2. ekteki içerik aynen korunur: 70 kelime + 70 gramer + 60 diyalog/paragraf sorusu.
+            // Bu havuz mevcut GRAMERGO'nun ünite, XP, rozet, hız turu, hata analizi ve öğretmen paneli sistemine dağıtılır.
+            if (!gameDatabase.level1.length || !gameDatabase.level2.length || !gameDatabase.level3.length) {
+                generateAllQuestions();
+            }
 
-            const adjectives = [
-                { adj: "generous", opposite: "selfish", type: "Kişilik Sıfatı" },
-                { adj: "honest", opposite: "dishonest", type: "Kişilik Sıfatı" },
-                { adj: "outgoing", opposite: "shy", type: "Dış Görünüş Sıfatı" },
-                { adj: "helpful", opposite: "unhelpful", type: "Kişilik Sıfatı" },
-                { adj: "stubborn", opposite: "easy-going", type: "Kişilik Sıfatı" }
-            ];
+            const buildLevel1 = gameDatabase.level1.map(q => normalizeAcademyQuestion(q, 'Seviye 1: Kelime Dedektifi', 'level1'));
+            const buildLevel2 = gameDatabase.level2.map(q => normalizeAcademyQuestion(q, 'Seviye 2: Cümle Mimarı', 'level2'));
+            const buildLevel3 = gameDatabase.level3.map(q => normalizeAcademyQuestion(q, 'Seviye 3: Diyalog Ustası', 'level3'));
 
-            // Loop Grades
-            for (let grade in dynamicMEBDatabase) {
+            Object.keys(dynamicMEBDatabase).forEach(grade => {
                 const db = dynamicMEBDatabase[grade];
-                
-                db.units.forEach(unit => {
-                    const id = unit.id;
-                    const questionList = db.questions[id];
+                db.words = mergeWordLists(db.words || [], wordDictionary.map(w => ({ en: w.eng, tr: w.tr, category: w.category })));
 
-                    // Generate until we reach exactly 50 playable questions
-                    while (questionList.length < 50) {
-                        const randomSeed = Math.floor(Math.random() * 1000);
-                        const qIndex = questionList.length + 1;
-
-                        if (grade == "5") {
-                            if (id === "hello") {
-                                if (randomSeed % 2 === 0) {
-                                    const cIdx = randomSeed % countries.length;
-                                    questionList.push({
-                                        type: 'gap_fill',
-                                        title: `Hello! - Q${qIndex} (Dil/Ülke)`,
-                                        errorType: 'Dil/Ülke Karışıklığı',
-                                        explanation: `Ülkeler (${countries[cIdx]}) ve diller (${languages[cIdx]}) farklı kelimelerdir. 'Speak' dillerle kullanılır.`,
-                                        part1: `My classmate is from ${countries[cIdx]}, and they speak`,
-                                        part2: "very well.",
-                                        options: [languages[cIdx], countries[cIdx], nationalities[cIdx], "English"],
-                                        correctAnswer: languages[cIdx]
-                                    });
-                                } else {
-                                    const sub = schoolSubjects[randomSeed % schoolSubjects.length];
-                                    questionList.push({
-                                        type: 'word_order',
-                                        title: `Hello! - Q${qIndex} (Ders Sıralama)`,
-                                        errorType: 'Cümle Sıralama Hatası',
-                                        explanation: "Geniş zamanlı cümle yapısı: Özne (I) + Beğeni Fiili (like/enjoy) + Nesne/Ders adıdır.",
-                                        scrambled: ["like", sub, "studying", "I", "very", "much"],
-                                        correctOrder: ["I", "like", "studying", sub, "very", "much"]
-                                    });
-                                }
-                            } else if (id === "town") {
-                                if (randomSeed % 2 === 0) {
-                                    const p1 = places[randomSeed % places.length];
-                                    const p2 = places[(randomSeed + 1) % places.length];
-                                    const prep = prepositions[randomSeed % prepositions.length];
-                                    questionList.push({
-                                        type: 'gap_fill',
-                                        title: `My Town - Q${qIndex} (Yer Tarifi)`,
-                                        errorType: 'Yer Edatı Hatası',
-                                        explanation: `Konum belirtirken '${prep}' yapısı nesneden önce gelerek konumu niteler.`,
-                                        part1: `You can find the ${p1}`,
-                                        part2: `the green ${p2}.`,
-                                        options: [prep, "between", "under", "through"],
-                                        correctAnswer: prep
-                                    });
-                                } else {
-                                    const p = places[randomSeed % places.length];
-                                    questionList.push({
-                                        type: 'word_order',
-                                        title: `My Town - Q${qIndex} (Yol Tarifi)`,
-                                        errorType: 'Soru Sorma Hatası',
-                                        explanation: "İngilizce kibar soru yapılarında 'Can you' veya 'Where is' kalıpları cümlenin başında yer alır.",
-                                        scrambled: ["Where", "the", "is", p, "please", "?"],
-                                        correctOrder: ["Where", "is", "the", p, "please", "?"]
-                                    });
-                                }
-                            } else if (id === "hobbies") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Hobbies - Q${qIndex} (Yetenekler)`,
-                                    errorType: 'Zıtlık Bağlacı Hatası',
-                                    explanation: "'But' bağlacı olumlu yetenek (can) ile olumsuzluk (can't) arasında zıtlık kurar.",
-                                    part1: "My sister can ride a bicycle,",
-                                    part2: "she can't fly a kite.",
-                                    options: ["but", "and", "because", "so"],
-                                    correctAnswer: "but"
-                                });
-                            } else if (id === "routine") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Daily Routine - Q${qIndex} (Geniş Zaman)`,
-                                    errorType: 'Geniş Zaman Çekim Hatası',
-                                    explanation: "He, She, It özneleriyle geniş zamanda fiile '-s', '-es' takısı getirilir.",
-                                    part1: "My mother usually",
-                                    part2: "shopping at the local market.",
-                                    options: ["goes", "go", "going", "went"],
-                                    correctAnswer: "goes"
-                                });
-                            }
-                        }
-
-                        if (grade == "6") {
-                            if (id === "life") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Life - Q${qIndex} (Günlük Yaşam)`,
-                                    errorType: 'Tarih Edatı Hatası',
-                                    explanation: "Belirli günlerde ve tam tarihlerden önce 'on' edatı kullanılır.",
-                                    part1: "We always visit our grand parents",
-                                    part2: "Saturdays.",
-                                    options: ["on", "at", "in", "by"],
-                                    correctAnswer: "on"
-                                });
-                            } else if (id === "yummy") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Breakfast - Q${qIndex} (Some/Any)`,
-                                    errorType: 'Some / Any Kullanım Hatası',
-                                    explanation: "Sorularda ve olumsuz cümlelerde 'any' (hiç) kullanılır.",
-                                    part1: "Is there",
-                                    part2: "cheese left on the plate?",
-                                    options: ["any", "some", "a", "an"],
-                                    correctAnswer: "any"
-                                });
-                            } else if (id === "downtown") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Downtown - Q${qIndex} (Karşılaştırma)`,
-                                    errorType: 'Karşılaştırma (Comparative) Hatası',
-                                    explanation: "Karşılaştırmalarda tek heceli sıfatlar '-er' takısı alıp 'than' ile kullanılır.",
-                                    part1: "The city life is",
-                                    part2: "the village life.",
-                                    options: ["busier than", "busy than", "more busy", "as busy"],
-                                    correctAnswer: "busier than"
-                                });
-                            } else if (id === "weather") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Weather - Q${qIndex} (Hava Durumu)`,
-                                    errorType: 'Hava Durumu-Sıfat Hatası',
-                                    explanation: "Rüzgarlı havalarda uçurtma uçurmak (windy) için en ideal hava durumudur.",
-                                    part1: "We go outside to fly our kites when it is",
-                                    part2: "outside.",
-                                    options: ["windy", "snowy", "rainy", "hot"],
-                                    correctAnswer: "windy"
-                                });
-                            }
-                        }
-
-                        if (grade == "7") {
-                            if (id === "appearance") {
-                                const adjPair = adjectives[randomSeed % adjectives.length];
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Appearance - Q${qIndex} (Kişilik)`,
-                                    errorType: 'Sıfat Karışıklığı',
-                                    explanation: `Zıt anlamlı sıfatlar: ${adjPair.adj} ve ${adjPair.opposite} tamamen zıt anlam taşır.`,
-                                    part1: `My teacher is definitely not ${adjPair.opposite}, she is extremely`,
-                                    part2: "and treats everyone nicely.",
-                                    options: [adjPair.adj, adjPair.opposite, "stubborn", "lazy"],
-                                    correctAnswer: adjPair.adj
-                                });
-                            } else if (id === "biographies") {
-                                const irr = irregularVerbs[randomSeed % irregularVerbs.length];
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Biographies - Q${qIndex} (Geçmiş Zaman)`,
-                                    errorType: 'Geçmiş Zaman Fiil Çekimi',
-                                    explanation: `'${irr.v1}' düzensiz bir fiildir ve Geçmiş Zaman (Past Simple) hali '${irr.v2}' şeklindedir.`,
-                                    part1: `She`,
-                                    part2: "to the school library yesterday afternoon.",
-                                    options: [irr.v2, irr.v1, `${irr.v1}ed`, `${irr.v1}s`],
-                                    correctAnswer: irr.v2
-                                });
-                            } else if (id === "sports") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Sports - Q${qIndex} (Sıklık)`,
-                                    errorType: 'Sıklık Zarfı Anlam Hatası',
-                                    explanation: "Sıklık sorularında 'How often' (ne sıklıkla) kalıbı kullanılır.",
-                                    part1: "How",
-                                    part2: "do you practice basketball after school?",
-                                    options: ["often", "many", "much", "long"],
-                                    correctAnswer: "often"
-                                });
-                            } else if (id === "wildlife") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Wildlife - Q${qIndex} (Tavsiyeler)`,
-                                    errorType: 'Öneri / Zorunluluk Modalları',
-                                    explanation: "Doğayı korumak ve hayvanları avlamamak için 'shouldn't' (yapmamalıyız) seçilmelidir.",
-                                    part1: "We",
-                                    part2: "hunt wild animals for our hobbies.",
-                                    options: ["shouldn't", "should", "must", "can"],
-                                    correctAnswer: "shouldn't"
-                                });
-                            }
-                        }
-
-                        if (grade == "8") {
-                            if (id === "friendship") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Friendship - Q${qIndex} (Mazeret)`,
-                                    errorType: 'Bağlaç / Mazeret Hatası',
-                                    explanation: "Davetleri reddederken kullanılan mazeret ifadelerinden önce 'but' (ama) konur.",
-                                    part1: "I would love to come to your birthday party,",
-                                    part2: "I am too busy studying for LGS.",
-                                    options: ["but", "so", "and", "because"],
-                                    correctAnswer: "but"
-                                });
-                            } else if (id === "teenlife") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Teen Life - Q${qIndex} (Tercihler)`,
-                                    errorType: 'Tercih Yapısı Hatası',
-                                    explanation: "'Prefer' yapısında tercih edilen şey ile edilmeyen arasına 'to' edatı gelir.",
-                                    part1: "I prefer staying at home",
-                                    part2: "going out with annoying people.",
-                                    options: ["to", "than", "rather", "from"],
-                                    correctAnswer: "to"
-                                });
-                            } else if (id === "kitchen") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Kitchen - Q${qIndex} (Tarif Sıralaması)`,
-                                    errorType: 'Süreç/Bağlaç Sıralama Hatası',
-                                    explanation: "Yemek tariflerinin ilk adımı her zaman 'First' (İlk olarak) şeklinde başlar.",
-                                    part1: "First",
-                                    part2: "wash the vegetables under warm water.",
-                                    options: ["First", "Finally", "Next", "After that"],
-                                    correctAnswer: "First"
-                                });
-                            } else if (id === "phone") {
-                                questionList.push({
-                                    type: 'gap_fill',
-                                    title: `Phone - Q${qIndex} (Telefon Kalıpları)`,
-                                    errorType: 'Telefon Kalıpları Hatası',
-                                    explanation: "Telefonda birini bekletirken kullanılan kalıp 'hold on' ya da 'hang on' şeklindedir.",
-                                    part1: "Could you",
-                                    part2: "for a minute? I will get him.",
-                                    options: ["hold on", "call back", "hang up", "pick up"],
-                                    correctAnswer: "hold on"
-                                });
-                            }
-                        }
-                    }
+                db.units.forEach((unit, unitIndex) => {
+                    const offset = (parseInt(grade, 10) - 5) * 19 + unitIndex * 23;
+                    const pool = [
+                        ...rotateTake(buildLevel1, 18, offset),
+                        ...rotateTake(buildLevel2, 20, offset * 2),
+                        ...rotateTake(buildLevel3, 12, offset * 3)
+                    ].map((q, idx) => ({
+                        ...cloneQuestion(q),
+                        title: `${unit.name} · ${q.title}`,
+                        unitName: unit.name,
+                        unitId: unit.id,
+                        qNo: idx + 1
+                    }));
+                    db.questions[unit.id] = pool;
                 });
+            });
+        }
+
+        function cloneQuestion(q) {
+            return JSON.parse(JSON.stringify(q));
+        }
+
+        function normalizeAcademyQuestion(q, levelName, levelCode) {
+            const correct = q.options.find(o => o.isCorrect) || q.options[0];
+            return {
+                type: 'gap_fill',
+                subtype: 'multiple_choice',
+                title: `${levelName} - Görev ${q.id}`,
+                questionText: q.question,
+                options: q.options.map(o => ({
+                    text: o.text,
+                    isCorrect: !!o.isCorrect,
+                    type: o.type,
+                    why: o.why,
+                    rule: o.rule
+                })),
+                correctAnswer: correct.text,
+                errorType: correct.type || levelName,
+                explanation: `${correct.why || ''} ${correct.rule || ''}`.trim(),
+                academyLevel: levelCode,
+                illustration: q.illustration || 'Grammar'
+            };
+        }
+
+        function rotateTake(arr, count, offset) {
+            const out = [];
+            if (!arr || arr.length === 0) return out;
+            for (let i = 0; i < count; i++) {
+                out.push(cloneQuestion(arr[(offset + i) % arr.length]));
+            }
+            return out;
+        }
+
+        function mergeWordLists(baseWords, extraWords) {
+            const seen = new Set();
+            const merged = [];
+            [...baseWords, ...extraWords].forEach(w => {
+                if (!w || !w.en || !w.tr) return;
+                const key = String(w.en).toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                merged.push(w);
+            });
+            return merged;
+        }
+
+        function normalizeAllStudents() {
+            Object.keys(dynamicMEBDatabase).forEach(grade => {
+                const unitCount = dynamicMEBDatabase[grade].units.length;
+                dynamicMEBDatabase[grade].students = dynamicMEBDatabase[grade].students.map(raw => {
+                    const s = migrateStudent(raw);
+                    while (s.scores.length < unitCount) s.scores.push(0);
+                    if (s.scores.length > unitCount) s.scores = s.scores.slice(0, unitCount);
+                    if (!s.ownedAvatars || s.ownedAvatars.length === 0) s.ownedAvatars = s.emoji ? [s.emoji] : [];
+                    return s;
+                });
+            });
+        }
+
+        const DEMO_STUDENT_NAMES = [
+            'Ahmet Yılmaz', 'Zeynep Kaya', 'Mehmet Demir', 'Elif Çelik', 'Hüseyin Şahin', 'Ayşe Yıldız',
+            'Mustafa Aydın', 'Sena Arslan', 'Ömer Faruk', 'Büşra Polat', 'Yusuf Eren', 'Gamze Koç',
+            'Emre Korkmaz', 'İrem Taş', 'Mert Yılmaz', 'Ece Duman', 'Ali Can', 'Ceren Acar',
+            'Kerem Öztürk', 'Duru Yıldırım', 'Furkan Akyüz', 'Nisa Gül', 'Batuhan Işık', 'Pelin Demir',
+            'Oğuzhan Yalçın', 'Aslıhan Boz', 'Caner Arı', 'İlayda Çetin'
+        ];
+
+        const DEMO_ERROR_TYPES = [
+            'Kelime Sırası Hatası', 'Zaman Kullanımı Hatası', 'Some / Any Kullanım Hatası',
+            'Edat Kullanımı Hatası', 'Çoğul / Tekil Hatası', 'Diyalog Bütünlüğü Hatası',
+            'Past Simple Düzensiz Fiil Hatası', 'Karşılaştırma Hatası', 'Bağlaç Anlam Hatası'
+        ];
+
+        function ensureDemoStudentCoverage() {
+            const targetByGrade = { '5': 12, '6': 12, '7': 12, '8': 28 };
+            Object.keys(targetByGrade).forEach(grade => {
+                const db = dynamicMEBDatabase[grade];
+                const unitCount = db.units.length;
+                let currentCount = db.students.length;
+                for (let i = currentCount; i < targetByGrade[grade]; i++) {
+                    const baseName = DEMO_STUDENT_NAMES[i % DEMO_STUDENT_NAMES.length];
+                    const scores = db.units.map((_, idx) => Math.max(4, Math.min(96, 92 - i * 3 + idx * 4 + (i % 5) * 2)));
+                    const student = {
+                        code: `STU-${grade}${String(i + 1).padStart(2, '0')}`,
+                        name: baseName,
+                        emoji: mascotAvatars[i % mascotAvatars.length].emoji,
+                        scores,
+                        streak: Math.max(0, 14 - (i % 9)),
+                        mistakes: [],
+                        errorLog: [],
+                        xp: 400 + (targetByGrade[grade] - i) * 35,
+                        badges: i < 4 ? ['first_step', 'combo5'] : ['first_step'],
+                        bestCombo: Math.max(1, 8 - (i % 5)),
+                        stars: 20 + (i % 10) * 6,
+                        ownedAvatars: [mascotAvatars[i % mascotAvatars.length].emoji],
+                        demo: true
+                    };
+                    seedDemoErrors(student, grade, i);
+                    db.students.push(student);
+                }
+                db.students.forEach((s, idx) => {
+                    migrateStudent(s);
+                    while (s.scores.length < unitCount) s.scores.push(0);
+                    if (!s.errorLog || s.errorLog.length === 0) seedDemoErrors(s, grade, idx);
+                });
+            });
+        }
+
+        function seedDemoErrors(student, grade, seed) {
+            if (!student.errorLog) student.errorLog = [];
+            if (student.errorLog.length > 0) return;
+            const count = Math.max(1, Math.min(12, 12 - Math.floor(seed / 3)));
+            const units = dynamicMEBDatabase[grade].units;
+            for (let i = 0; i < count; i++) {
+                const err = DEMO_ERROR_TYPES[(seed + i) % DEMO_ERROR_TYPES.length];
+                const unit = units[(seed + i) % units.length];
+                student.errorLog.push({
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    grade,
+                    unit: unit.id,
+                    unitName: unit.name,
+                    title: `${unit.name} · Demo Hata Kaydı`,
+                    question: 'Öğrenci cevaplarından üretilen örnek hata kaydı.',
+                    selected: 'Yanlış cevap',
+                    correct: 'Doğru yapı',
+                    errorType: err,
+                    rule: recommendationForError(err)
+                });
+                if (!student.mistakes.includes(err)) student.mistakes.push(err);
             }
         }
+
+        function recommendationForError(errorType) {
+            const map = {
+                'Kelime Sırası Hatası': 'Cümle dizilişi: özne + yardımcı fiil + ana fiil + nesne sırasını tekrar et.',
+                'Zaman Kullanımı Hatası': 'Present Simple, Present Continuous ve Past Simple zaman göstergelerini karşılaştır.',
+                'Some / Any Kullanım Hatası': 'Olumlu, olumsuz ve soru cümlelerinde some/any ayrımını tekrar et.',
+                'Edat Kullanımı Hatası': 'Yer-yön ve zaman edatlarını örnek cümlelerle tekrar et.',
+                'Çoğul / Tekil Hatası': 'Sayılabilen/sayılamayan isimleri ve çoğul eklerini tekrar et.',
+                'Diyalog Bütünlüğü Hatası': 'Davet, teklif, kabul/red ve açıklama isteme kalıplarını diyalog içinde tekrar et.',
+                'Past Simple Düzensiz Fiil Hatası': 'Düzensiz fiillerin 2. hallerini eşleştirme kartlarıyla tekrar et.',
+                'Karşılaştırma Hatası': 'Comparative ve superlative sıfat yapılarını karşılaştır.',
+                'Bağlaç Anlam Hatası': 'Because, but, so bağlaçlarının sebep-zıtlık-sonuç işlevlerini tekrar et.'
+            };
+            return map[errorType] || 'Konuya ait kısa tekrar ve hedefli mini görev önerilir.';
+        }
+
+        function getQuestionTextForLog(question) {
+            if (!question) return '';
+            if (question.questionText) return question.questionText;
+            if (question.part1 !== undefined || question.part2 !== undefined) return `${question.part1 || ''} ____ ${question.part2 || ''}`.trim();
+            if (question.correctOrder) return question.correctOrder.join(' ');
+            return question.title || '';
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+        }
+
+        function recordErrorLog(student, question, errorType, selectedAnswer, correctAnswer, rule) {
+            if (!student) return;
+            if (!student.errorLog) student.errorLog = [];
+            const unit = dynamicMEBDatabase[activeGrade].units.find(u => u.id === activeCategory);
+            student.errorLog.push({
+                date: new Date().toLocaleDateString('tr-TR'),
+                grade: activeGrade,
+                unit: activeCategory,
+                unitName: unit ? unit.name : (question.unitName || activeCategory),
+                title: question.title || '',
+                question: getQuestionTextForLog(question),
+                selected: selectedAnswer || '',
+                correct: correctAnswer || (question.correctOrder ? question.correctOrder.join(' ') : ''),
+                errorType: errorType || 'Genel Hata',
+                rule: rule || question.explanation || ''
+            });
+            if (student.errorLog.length > 300) student.errorLog = student.errorLog.slice(-300);
+        }
+
 
         let activeGrade = "8"; 
         let currentUser = null; 
@@ -1683,9 +2105,13 @@
         let teacherFilteredGrade = "8";
 
         window.onload = function() {
-            // Run procedural generator instantly on start to create 50+ questions per level!
+            // 2. ekteki 200 soruluk içerik motoru önce üretilir, ardından mevcut gelişmiş GRAMERGO sistemi içine dağıtılır.
+            generateAllQuestions();
             expandMEBDatabase();
             loadState();
+            normalizeAllStudents();
+            ensureDemoStudentCoverage();
+            saveState();
             renderAvatarSelectionGrid();
             renderQuickStudentCards();
             switchView('login-portal');
@@ -1808,9 +2234,7 @@
             }
 
             const newId = `KDT-${Math.floor(1000 + Math.random() * 9000)}`;
-            
-            // STRICT COMPLIANCE: Exactly 0 scores for all units on fresh start!
-            const defaultScores = [0, 0, 0, 0]; 
+            const defaultScores = Array(dynamicMEBDatabase[selectedRegGrade].units.length).fill(0);
 
             const newStudent = {
                 code: newId,
@@ -1819,11 +2243,13 @@
                 scores: defaultScores,
                 streak: 0,
                 mistakes: [],
+                errorLog: [],
                 xp: 0,
                 badges: [],
                 bestCombo: 0,
                 stars: 0,
-                ownedAvatars: [selectedRegAvatar]
+                ownedAvatars: [selectedRegAvatar],
+                demo: false
             };
 
             dynamicMEBDatabase[selectedRegGrade].students.push(newStudent);
@@ -2097,33 +2523,50 @@
         function setupGapFill(q) {
             document.getElementById('game-gap-fill').classList.remove('hidden');
 
-            document.getElementById('gap-part1').textContent = q.part1;
-            document.getElementById('gap-part2').textContent = q.part2;
-            document.getElementById('gap-field').textContent = '? ? ?';
+            const part1 = document.getElementById('gap-part1');
+            const part2 = document.getElementById('gap-part2');
+            const field = document.getElementById('gap-field');
+
+            if (q.questionText) {
+                part1.textContent = q.questionText;
+                part2.textContent = '';
+                field.textContent = '';
+                field.classList.add('hidden');
+            } else {
+                part1.textContent = q.part1;
+                part2.textContent = q.part2;
+                field.textContent = '? ? ?';
+                field.classList.remove('hidden');
+            }
 
             const optionsContainer = document.getElementById('gap-options');
             if (!optionsContainer) return;
             optionsContainer.innerHTML = '';
 
             currentSelectedGapAnswer = '';
+            currentSelectedGapMeta = null;
 
-            q.options.forEach(opt => {
+            q.options.forEach(rawOpt => {
+                const opt = (typeof rawOpt === 'object') ? rawOpt : { text: rawOpt };
                 const btn = document.createElement('button');
                 btn.className = "bg-white hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-800 font-bold py-4 px-4 rounded-2xl shadow-sm transition duration-200 text-sm flex items-center justify-center option-button";
-                btn.innerHTML = `<span>${opt}</span>`;
+                btn.innerHTML = `<span>${escapeHTML(opt.text)}</span>`;
                 btn.onclick = (e) => {
                     playSound('select');
-                    selectGapOption(opt, e.currentTarget);
+                    selectGapOption(opt.text, e.currentTarget, opt);
                 };
                 optionsContainer.appendChild(btn);
             });
         }
 
         let currentSelectedGapAnswer = '';
+        let currentSelectedGapMeta = null;
 
-        function selectGapOption(val, element) {
+        function selectGapOption(val, element, meta = null) {
             currentSelectedGapAnswer = val;
-            document.getElementById('gap-field').textContent = val;
+            currentSelectedGapMeta = meta || { text: val };
+            const field = document.getElementById('gap-field');
+            if (field && !field.classList.contains('hidden')) field.textContent = val;
             
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-800');
@@ -2138,6 +2581,10 @@
             if (q.type === 'word_order') {
                 isCorrect = selectedWords.join(' ').toLowerCase() === q.correctOrder.join(' ').toLowerCase();
             } else if (q.type === 'gap_fill') {
+                if (!currentSelectedGapAnswer) {
+                    alert('Lütfen bir seçenek işaretleyin.');
+                    return;
+                }
                 isCorrect = currentSelectedGapAnswer === q.correctAnswer;
             }
 
@@ -2163,6 +2610,13 @@
             if (!modal) return;
             modal.classList.remove('hidden');
 
+            const selectedMeta = currentSelectedGapMeta || null;
+            const selectedRule = selectedMeta && selectedMeta.rule ? selectedMeta.rule : (question.explanation || '');
+            const selectedWhy = selectedMeta && selectedMeta.why ? selectedMeta.why : '';
+            const selectedErrorType = selectedMeta && selectedMeta.type && selectedMeta.type !== 'Doğru Yapı'
+                ? selectedMeta.type
+                : (question.errorType || 'Dil Bilgisi Hatası');
+
             if (isCorrect) {
                 playSound('success');
                 bg.className = "rounded-3xl p-6 border bg-emerald-50 border-emerald-200 text-emerald-900 pop-effect";
@@ -2173,10 +2627,10 @@
                     </svg>
                 `;
                 status.textContent = "Harika! Doğru Cevap 🎉";
-                errorTag.textContent = "USTALIK SEVİYESİ ARTTI";
-                explanation.textContent = "Harika bir dil sezgisi! Kuralları doğru uygulayarak hedefe bir adım daha yaklaştın.";
+                errorTag.textContent = selectedMeta && selectedMeta.type ? selectedMeta.type : "USTALIK SEVİYESİ ARTTI";
+                explanation.textContent = selectedWhy || "Harika bir dil sezgisi! Kuralları doğru uygulayarak hedefe bir adım daha yaklaştın.";
                 spacedRepBox.className = "bg-white/40 p-3 rounded-xl border border-white/20 text-xs flex items-center space-x-2 text-emerald-800 mt-2";
-                document.getElementById('spaced-rep-text').textContent = "Bu konu başarı hanene eklendi. Tekrar aralığı uzatıldı.";
+                document.getElementById('spaced-rep-text').textContent = selectedRule || "Bu konu başarı hanene eklendi. Tekrar aralığı uzatıldı.";
                 adjustMastery(3); 
                 updateLiveStudentScore(true);
 
@@ -2185,7 +2639,6 @@
                 if (currentUser && !isTeacherMode) {
                     currentUser.bestCombo = Math.max(currentUser.bestCombo || 0, currentCombo);
                 }
-                // XP: base 10 + combo bonus (capped)
                 const comboBonus = Math.min(currentCombo - 1, 5) * 2;
                 grantXP(10 + comboBonus);
                 if (currentCombo >= 3) {
@@ -2202,23 +2655,26 @@
                     </svg>
                 `;
                 status.textContent = "Gelişmek için Harika Bir Hata!";
-                errorTag.textContent = `Hata Türü: ${question.errorType}`;
+                errorTag.textContent = `Hata Türü: ${selectedErrorType}`;
                 explanation.innerHTML = `
                     <strong>Neden Yanlış?</strong><br>
-                    ${question.explanation}
+                    ${escapeHTML(selectedWhy || question.explanation || 'Bu seçenek cümlenin anlamı veya gramer kuralı ile uyumlu değil.')}<br>
+                    <strong>Altın Kural:</strong> ${escapeHTML(selectedRule || recommendationForError(selectedErrorType))}
                 `;
                 spacedRepBox.className = "bg-white/40 p-3 rounded-xl border border-white/20 text-xs flex items-center space-x-2 text-rose-800 mt-2";
-                document.getElementById('spaced-rep-text').textContent = "GRAMERGO hata etiketleme sistemi bu hatayı öğretmen raporuna ve unutma eğrisine işledi.";
+                document.getElementById('spaced-rep-text').textContent = "GRAMERGO hata etiketleme sistemi bu hatayı öğretmen raporuna, karneye ve unutma eğrisi tekrarına işledi.";
                 
                 if (currentUser && !isTeacherMode) {
                     const students = dynamicMEBDatabase[activeGrade].students;
                     const dbStudent = students.find(s => s.code === currentUser.code);
                     if (dbStudent) {
                         if (!dbStudent.mistakes) dbStudent.mistakes = [];
-                        if (!dbStudent.mistakes.includes(question.errorType)) {
-                            dbStudent.mistakes.push(question.errorType);
+                        if (!dbStudent.mistakes.includes(selectedErrorType)) {
+                            dbStudent.mistakes.push(selectedErrorType);
                         }
+                        recordErrorLog(dbStudent, question, selectedErrorType, currentSelectedGapAnswer, question.correctAnswer, selectedRule || recommendationForError(selectedErrorType));
                         currentUser.mistakes = dbStudent.mistakes;
+                        currentUser.errorLog = dbStudent.errorLog;
                         updateSpacedRepetitionHighlight(currentUser);
                     }
                 }
@@ -2364,7 +2820,11 @@
                         </div>
                     </div>
 
-                    <button onclick="this.closest('.fixed').remove(); goToDashboard();" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onclick="downloadStudentReportPNG()" class="bg-indigo-600 text-white font-bold py-3 rounded-2xl shadow-lg transition">📄 Karneyi İndir</button>
+                        <button onclick="downloadErrorAnalysisPNG()" class="bg-rose-600 text-white font-bold py-3 rounded-2xl shadow-lg transition">📊 Hata Raporunu İndir</button>
+                    </div>
+                    <button onclick="this.closest('.fixed').remove(); goToDashboard();" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-lg transition">
                         Ana Sayfaya Dön
                     </button>
                 </div>
@@ -2597,8 +3057,34 @@
                 });
             }
 
+            renderTeacherErrorTable();
             renderErrorBarCharts();
             renderAIRecommendations();
+        }
+
+
+        function renderTeacherErrorTable() {
+            const body = document.getElementById('teacher-error-table-body');
+            const badge = document.getElementById('teacher-error-count-badge');
+            if (!body) return;
+            const students = dynamicMEBDatabase[teacherFilteredGrade].students;
+            const { total } = getErrorCounts(students);
+            if (badge) badge.textContent = `${total} Hata Kaydı`;
+            body.innerHTML = '';
+            students.slice(0, 28).forEach(student => {
+                const count = (student.errorLog || []).length || (student.mistakes || []).length;
+                const top = topErrorForStudent(student);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-rose-50/30 transition';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-left font-bold text-slate-800">${escapeHTML(student.name)}<div class="font-mono text-[10px] text-indigo-500">${escapeHTML(student.code)}</div></td>
+                    <td class="px-4 py-3 text-center">${teacherFilteredGrade}. Sınıf</td>
+                    <td class="px-4 py-3 text-left"><span class="bg-rose-100 text-rose-700 px-2 py-1 rounded-lg font-black">${escapeHTML(top)}</span></td>
+                    <td class="px-4 py-3 text-center font-black ${count >= 8 ? 'text-rose-600' : count >= 4 ? 'text-amber-600' : 'text-emerald-600'}">${count}</td>
+                    <td class="px-4 py-3 text-left text-slate-600">${escapeHTML(recommendationForError(top))}</td>
+                `;
+                body.appendChild(tr);
+            });
         }
 
         function renderErrorBarCharts() {
@@ -2606,31 +3092,19 @@
             if (!container) return;
             container.innerHTML = '';
 
-            let chartData = [];
-            if (teacherFilteredGrade === "5") {
-                chartData = [
-                    { title: "Zaman Edatı Karışıklığı (In/On/At)", rate: "35%", color: "bg-rose-500" },
-                    { title: "Diller & Ülkeler Farkı (Hello)", rate: "28%", color: "bg-amber-400" },
-                    { title: "Soru Yapıları & Yön Tarifi", rate: "20%", color: "bg-teal-500" }
-                ];
-            } else if (teacherFilteredGrade === "6") {
-                chartData = [
-                    { title: "Şimdiki Zaman & Karşılaştırmalar (Downtown)", rate: "39%", color: "bg-rose-500" },
-                    { title: "Miktar Belirteçleri (Some/Any - Yummy)", rate: "30%", color: "bg-amber-550" },
-                    { title: "Tarihler ve Günlük Aktiviteler (Life)", rate: "15%", color: "bg-emerald-500" }
-                ];
-            } else if (teacherFilteredGrade === "7") {
-                chartData = [
-                    { title: "Geçmiş Zaman Fiil Çekimleri (Biographies)", rate: "45%", color: "bg-rose-500" },
-                    { title: "Kişilik/Dış Görünüş Sıfatları (Appearance)", rate: "28%", color: "bg-amber-500" },
-                    { title: "Spor Yapıları & Can/Could", rate: "18%", color: "bg-teal-500" }
-                ];
-            } else {
-                chartData = [
-                    { title: "Kelime Sırası (Word Order - Friendship)", rate: "42%", color: "bg-rose-500" },
-                    { title: "Süreç Bağlaçları & Yemek Tarifi", rate: "31%", color: "bg-amber-500" },
-                    { title: "Kalıplaşmış Telefon İfadeleri", rate: "18%", color: "bg-indigo-500" }
-                ];
+            const students = dynamicMEBDatabase[teacherFilteredGrade].students;
+            const { counts, total } = getErrorCounts(students);
+            let chartData = Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6)
+                .map(([title, count], idx) => ({
+                    title,
+                    rate: total ? Math.round(count * 100 / total) : 0,
+                    color: ['bg-rose-500', 'bg-amber-500', 'bg-indigo-500', 'bg-teal-500', 'bg-purple-500', 'bg-slate-500'][idx % 6]
+                }));
+
+            if (chartData.length === 0) {
+                chartData = [{ title: 'Henüz hata kaydı yok', rate: 0, color: 'bg-slate-400' }];
             }
 
             chartData.forEach(item => {
@@ -2638,11 +3112,11 @@
                 wrapper.className = "space-y-1.5";
                 wrapper.innerHTML = `
                     <div class="flex justify-between text-xs font-semibold">
-                        <span class="text-slate-700">${item.title}</span>
-                        <span class="text-indigo-600 font-bold">${item.rate} Oran</span>
+                        <span class="text-slate-700">${escapeHTML(item.title)}</span>
+                        <span class="text-indigo-600 font-bold">%${item.rate} Oran</span>
                     </div>
                     <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                        <div class="${item.color} h-full rounded-full" style="width: ${item.rate}"></div>
+                        <div class="${item.color} h-full rounded-full" style="width: ${item.rate}%"></div>
                     </div>
                 `;
                 container.appendChild(wrapper);
@@ -2654,28 +3128,17 @@
             if (!container) return;
             container.innerHTML = '';
 
-            let recommends = [];
-            if (teacherFilteredGrade === "5") {
-                recommends = [
-                    { badge: "KRİTİK BAŞLIK", title: "In/On/At Edatları Zorluyor", desc: "Sınıfın %35'i günlerden önce 'on' getirme kuralını kaçırıyor. Haftalık tekrar kartlarına zaman çizelgeleri eklenmiştir.", type: "red" },
-                    { badge: "TAVSİYE", title: "Karakter Sıfatları Karşılaştırması", desc: "Film türlerini içeren 'Movies' ünitesindeki sıfatlar için kelime avı kartlarını aktive etmeniz önerilir.", type: "indigo" }
-                ];
-            } else if (teacherFilteredGrade === "6") {
-                recommends = [
-                    { badge: "DİKKAT", title: "Şehir & Köy Karşılaştırmaları", desc: "Downtown ünitesinde 'Comparative' sıfat çekimleri (more/er) öğrencilerin %39'unda karıştırılıyor.", type: "red" },
-                    { badge: "İLERLEME", title: "Kahvaltı Ünitesi Başarısı", desc: "Sınıfın %70'i some/any ayrımını doğru kavrayarak haritayı yeşile çevirdi.", type: "green" }
-                ];
-            } else if (teacherFilteredGrade === "7") {
-                recommends = [
-                    { badge: "KRİTİK", title: "Düzensiz Fiiller (Past Simple)", desc: "Öğrenciler biyografi yazarken düzensiz fiillerin 2. hallerini (grew, wrote, did) karıştırıyor. Sık sık düzensiz fiil eşleştirmesi çözdürülmeli.", type: "red" },
-                    { badge: "ÖNERİ", title: "Görsel Sıfat Eşleştirme", desc: "Appearance & Personality ünitesinde zıt anlamlı kişilik sıfatları (lazy/hardworking, selfish/generous) için Matcher modülünü açın.", type: "indigo" }
-                ];
-            } else {
-                recommends = [
-                    { badge: "LGS KRİTİK", title: "Sıralama Zarfları (Kitchen)", desc: "En son yapılan denemelerde öğrencilerin %42'si tarif süreçlerinin sıralamasında (First, Next, Finally) hata yapmıştır.", type: "red" },
-                    { badge: "GELİŞİM RAPORU", title: "Telefon İfadeleri Başarısı", desc: "Öğrencilerin %85'i 'On the Phone' ünitesi kalıplarını başarıyla tamamladı.", type: "green" }
-                ];
-            }
+            const students = dynamicMEBDatabase[teacherFilteredGrade].students;
+            const { counts } = getErrorCounts(students);
+            const topErrors = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            const recommends = topErrors.length ? topErrors.map(([err, count], idx) => ({
+                badge: idx === 0 ? 'ÖNCELİKLİ' : 'TAKİP',
+                title: err,
+                desc: `${count} hata kaydı görüldü. ${recommendationForError(err)}`,
+                type: idx === 0 ? 'red' : 'indigo'
+            })) : [
+                { badge: 'İLERLEME', title: 'Hata Kaydı Oluşmadı', desc: 'Sınıfta henüz yeni hata kaydı oluşmadı. Karma tekrar görevleriyle ölçüme devam edin.', type: 'green' }
+            ];
 
             recommends.forEach(item => {
                 let badgeStyle = "text-red-600 bg-red-50";
@@ -2685,12 +3148,346 @@
                 const card = document.createElement('div');
                 card.className = "bg-white/80 p-4 rounded-2xl border border-indigo-100 space-y-1.5 shadow-sm";
                 card.innerHTML = `
-                    <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full ${badgeStyle}">${item.badge}</span>
-                    <h4 class="text-xs font-black text-indigo-950">${item.title}</h4>
-                    <p class="text-slate-600 text-[11px] leading-relaxed">${item.desc}</p>
+                    <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full ${badgeStyle}">${escapeHTML(item.badge)}</span>
+                    <h4 class="text-xs font-black text-indigo-950">${escapeHTML(item.title)}</h4>
+                    <p class="text-slate-600 text-[11px] leading-relaxed">${escapeHTML(item.desc)}</p>
                 `;
                 container.appendChild(card);
             });
+        }
+
+
+        /* ============================================================
+           DOWNLOADABLE REPORTS: STUDENT CARD + ERROR ANALYSIS
+           Canvas tabanlıdır; ek kütüphane gerekmez. PNG olarak iner.
+           ============================================================ */
+        function getStudentAverage(student) {
+            if (!student || !student.scores || student.scores.length === 0) return 0;
+            return Math.round(student.scores.reduce((a, b) => a + b, 0) / student.scores.length);
+        }
+
+        function getErrorCounts(students) {
+            const counts = {};
+            let total = 0;
+            students.forEach(s => {
+                const logs = s.errorLog || [];
+                if (logs.length) {
+                    logs.forEach(l => {
+                        const key = l.errorType || 'Genel Hata';
+                        counts[key] = (counts[key] || 0) + 1;
+                        total++;
+                    });
+                } else if (s.mistakes && s.mistakes.length) {
+                    s.mistakes.forEach(m => {
+                        counts[m] = (counts[m] || 0) + 1;
+                        total++;
+                    });
+                }
+            });
+            return { counts, total };
+        }
+
+        function topErrorForStudent(student) {
+            const logs = student.errorLog || [];
+            const counts = {};
+            logs.forEach(l => counts[l.errorType || 'Genel Hata'] = (counts[l.errorType || 'Genel Hata'] || 0) + 1);
+            if (!Object.keys(counts).length && student.mistakes) {
+                student.mistakes.forEach(m => counts[m] = (counts[m] || 0) + 1);
+            }
+            const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+            return top || 'Hata kaydı yok';
+        }
+
+        function topErrorFromCounts(counts) {
+            const keys = Object.keys(counts);
+            if (!keys.length) return 'Hata kaydı yok';
+            return keys.sort((a, b) => counts[b] - counts[a])[0];
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+
+        function roundRect(ctx, x, y, w, h, r, fill = true, stroke = false) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            if (fill) ctx.fill();
+            if (stroke) ctx.stroke();
+        }
+
+        function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+            const words = String(text || '').split(' ');
+            let line = '';
+            let lines = 0;
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                    ctx.fillText(line.trim(), x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                    lines++;
+                    if (lines >= maxLines - 1) break;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line) ctx.fillText(line.trim(), x, y);
+        }
+
+        function drawMetricCard(ctx, x, y, w, h, title, value, icon, color) {
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#dbe4f0';
+            ctx.lineWidth = 2;
+            roundRect(ctx, x, y, w, h, 18, true, true);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x + 54, y + h / 2, 32, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 34px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(icon, x + 54, y + h / 2 + 11);
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#0f1e46';
+            ctx.font = '600 24px Arial';
+            ctx.fillText(title, x + 105, y + 43);
+            ctx.font = '800 44px Arial';
+            ctx.fillText(value, x + 105, y + 88);
+        }
+
+        function downloadStudentReportPNG() {
+            if (!currentUser || isTeacherMode) {
+                alert('Öğrenci karnesi indirmek için öğrenci profiliyle giriş yapın.');
+                return;
+            }
+            const student = currentUser;
+            const db = dynamicMEBDatabase[activeGrade];
+            const avg = getStudentAverage(student);
+            const rank = calculateRank(student, activeGrade);
+            const info = getLevelInfo(student.xp || 0);
+            const canvas = document.createElement('canvas');
+            canvas.width = 1600;
+            canvas.height = 1120;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#f7fafd';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#061b46';
+            ctx.fillRect(0, 0, canvas.width, 110);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 46px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('GRAMERGO', 48, 68);
+            ctx.textAlign = 'center';
+            ctx.font = '800 52px Arial';
+            ctx.fillText('ÖĞRENCİ GELİŞİM KARNESİ', 880, 70);
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#dbe4f0';
+            roundRect(ctx, 36, 140, 470, 210, 18, true, true);
+            ctx.fillStyle = '#e9eef6';
+            ctx.beginPath();
+            ctx.arc(125, 245, 68, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#8aa1bd';
+            ctx.beginPath();
+            ctx.arc(125, 220, 26, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(125, 292, 58, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = '#0f1e46';
+            ctx.font = '800 46px Arial';
+            ctx.fillText(student.name, 225, 210);
+            ctx.fillStyle = '#2166d1';
+            roundRect(ctx, 225, 235, 130, 42, 10, true, false);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 27px Arial';
+            ctx.fillText(`${activeGrade}. Sınıf`, 245, 265);
+            ctx.fillStyle = '#29405f';
+            ctx.font = '500 24px Arial';
+            ctx.fillText(`${info.title} · ${student.code}`, 225, 315);
+
+            drawMetricCard(ctx, 530, 140, 220, 210, 'Ustalık', String(avg), '✓', '#2166d1');
+            drawMetricCard(ctx, 775, 140, 220, 210, 'XP', String(student.xp || 0), 'XP', '#6b46c1');
+            drawMetricCard(ctx, 1020, 140, 220, 210, 'Yıldız', String(student.stars || 0), '★', '#f4a000');
+            drawMetricCard(ctx, 1265, 140, 300, 210, 'Seri / Sıra', `${student.streak || 0} gün · #${rank}`, '↗', '#0f9f86');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#dbe4f0';
+            roundRect(ctx, 36, 385, 1528, 395, 18, true, true);
+            ctx.fillStyle = '#061b46';
+            roundRect(ctx, 36, 385, 1528, 70, 18, true, false);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 32px Arial';
+            ctx.fillText('Ünite Bazlı Başarı', 70, 432);
+
+            ctx.fillStyle = '#29405f';
+            ctx.font = '700 22px Arial';
+            ctx.fillText('Ünite Adı', 120, 500);
+            ctx.fillText('Başarı Oranı', 690, 500);
+            ctx.fillText('İlerleme', 1000, 500);
+
+            db.units.forEach((unit, idx) => {
+                const y = 555 + idx * 72;
+                const score = student.scores[idx] || 0;
+                ctx.fillStyle = idx % 2 === 0 ? '#fbfdff' : '#f2f6fb';
+                ctx.fillRect(55, y - 42, 1488, 65);
+                ctx.fillStyle = '#0f1e46';
+                ctx.font = '800 27px Arial';
+                ctx.fillText(unit.name.replace(/^Unit \d+:\s*/, ''), 120, y);
+                ctx.fillStyle = score >= 76 ? '#16a34a' : score >= 51 ? '#f59e0b' : '#ef4444';
+                ctx.font = '800 34px Arial';
+                ctx.fillText(`%${score}`, 710, y + 3);
+                ctx.fillStyle = '#e6ebf2';
+                roundRect(ctx, 1000, y - 25, 430, 25, 12, true, false);
+                ctx.fillStyle = score >= 76 ? '#22c55e' : score >= 51 ? '#f59e0b' : '#ef4444';
+                roundRect(ctx, 1000, y - 25, Math.max(12, 430 * score / 100), 25, 12, true, false);
+            });
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#dbe4f0';
+            roundRect(ctx, 36, 815, 1528, 190, 18, true, true);
+            ctx.fillStyle = '#061b46';
+            roundRect(ctx, 36, 815, 1528, 58, 18, true, false);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 30px Arial';
+            ctx.fillText('Kazanılan Rozetler ve Güçlü Yönler', 70, 853);
+
+            const owned = (student.badges || []).slice(0, 5).map(id => BADGE_DEFS.find(b => b.id === id)).filter(Boolean);
+            const badgeList = owned.length ? owned : [{ icon: '✓', name: 'İlk Adım', desc: 'Gelişim süreci başladı.' }];
+            badgeList.forEach((b, idx) => {
+                const x = 70 + idx * 290;
+                ctx.fillStyle = '#f8fbff';
+                ctx.strokeStyle = '#dbe4f0';
+                roundRect(ctx, x, 895, 260, 85, 16, true, true);
+                ctx.fillStyle = '#2166d1';
+                ctx.beginPath(); ctx.arc(x + 42, 937, 32, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center'; ctx.fillText(b.icon, x + 42, 947);
+                ctx.textAlign = 'left'; ctx.fillStyle = '#0f1e46'; ctx.font = '800 22px Arial'; ctx.fillText(b.name, x + 88, 925);
+                ctx.fillStyle = '#29405f'; ctx.font = '500 16px Arial'; drawWrappedText(ctx, b.desc, x + 88, 952, 150, 18, 2);
+            });
+
+            ctx.fillStyle = '#eaf1fb';
+            roundRect(ctx, 36, 1030, 1528, 55, 14, true, false);
+            ctx.fillStyle = '#0f1e46';
+            ctx.font = '700 22px Arial';
+            ctx.fillText(`Son Güncelleme: ${new Date().toLocaleDateString('tr-TR')}  ·  Öğretmen Paneline Uyumlu  ·  İndirilebilir PNG Karne`, 70, 1066);
+
+            downloadCanvas(canvas, `gramergo_ogrenci_gelisim_karnesi_${student.name.replace(/\s+/g, '_')}.png`);
+        }
+
+        function downloadErrorAnalysisPNG() {
+            let students, grade, titleScope;
+            if (isTeacherMode) {
+                grade = teacherFilteredGrade;
+                students = dynamicMEBDatabase[grade].students;
+                titleScope = `${grade}. Sınıf`;
+            } else if (currentUser) {
+                grade = activeGrade;
+                students = [currentUser];
+                titleScope = `${currentUser.name} · ${grade}. Sınıf`;
+            } else {
+                alert('Hata raporu için öğrenci veya öğretmen profiliyle giriş yapın.');
+                return;
+            }
+
+            const { counts, total } = getErrorCounts(students);
+            const topError = topErrorFromCounts(counts);
+            const canvas = document.createElement('canvas');
+            canvas.width = 1800;
+            canvas.height = isTeacherMode ? 1660 : 980;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f7fafd'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#061b46'; ctx.fillRect(0, 0, canvas.width, 95);
+            ctx.fillStyle = '#ffffff'; ctx.font = '800 34px Arial'; ctx.textAlign = 'left'; ctx.fillText('GRAMERGO', 42, 60);
+            ctx.textAlign = 'center'; ctx.font = '800 42px Arial'; ctx.fillText('HATA ANALİZ RAPORU', 930, 60);
+            ctx.textAlign = 'right'; ctx.font = '600 18px Arial'; ctx.fillText(`Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 1740, 58);
+
+            drawMetricCard(ctx, 36, 125, 380, 140, 'Analiz Edilen', `${students.length} öğrenci`, '👥', '#2166d1');
+            drawMetricCard(ctx, 450, 125, 380, 140, 'Toplam Hata Kaydı', String(total), '!', '#ef3b72');
+            drawMetricCard(ctx, 864, 125, 420, 140, 'En Sık Hata', topError.length > 16 ? topError.slice(0, 16) + '…' : topError, '↗', '#f59e0b');
+            drawMetricCard(ctx, 1318, 125, 446, 140, 'Rapor Kapsamı', titleScope, '✓', '#0f9f86');
+
+            ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#dbe4f0'; roundRect(ctx, 36, 300, 1728, 150, 18, true, true);
+            ctx.fillStyle = '#0f1e46'; ctx.font = '800 24px Arial'; ctx.fillText('Hata Dağılımı', 70, 342);
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+            sorted.forEach(([name, value], idx) => {
+                const x = 70 + idx * 275;
+                const pct = total ? Math.round(value * 100 / total) : 0;
+                ctx.fillStyle = ['#ef4444','#f97316','#eab308','#8b5cf6','#2563eb','#0f9f86'][idx % 6];
+                roundRect(ctx, x, 365, 210, 20, 10, true, false);
+                ctx.fillStyle = '#e6ebf2'; roundRect(ctx, x, 398, 210, 16, 8, true, false);
+                ctx.fillStyle = ['#ef4444','#f97316','#eab308','#8b5cf6','#2563eb','#0f9f86'][idx % 6]; roundRect(ctx, x, 398, Math.max(8, 210 * pct / 100), 16, 8, true, false);
+                ctx.fillStyle = '#0f1e46'; ctx.font = '700 17px Arial'; drawWrappedText(ctx, name, x, 435, 210, 19, 2);
+                ctx.font = '800 19px Arial'; ctx.fillText(`${value} kayıt · %${pct}`, x, 388);
+            });
+
+            const startY = 490;
+            ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#dbe4f0'; roundRect(ctx, 36, startY, 1728, canvas.height - startY - 70, 18, true, true);
+            ctx.fillStyle = '#061b46'; roundRect(ctx, 36, startY, 1728, 58, 18, true, false);
+            ctx.fillStyle = '#ffffff'; ctx.font = '800 24px Arial'; ctx.textAlign = 'left'; ctx.fillText('Öğrenci Bazlı Hata Tablosu', 70, startY + 38);
+
+            const headers = ['#', 'Öğrenci', 'Sınıf', 'Toplam Hata', 'En Sık Hata', 'Öncelikli Tekrar Önerisi'];
+            const cols = [70, 130, 470, 590, 760, 1110];
+            ctx.fillStyle = '#eef4fb'; ctx.fillRect(55, startY + 72, 1688, 42);
+            ctx.fillStyle = '#29405f'; ctx.font = '800 17px Arial';
+            headers.forEach((h, i) => ctx.fillText(h, cols[i], startY + 100));
+
+            const rows = students.slice(0, isTeacherMode ? 28 : 10);
+            rows.forEach((s, idx) => {
+                const y = startY + 135 + idx * 36;
+                ctx.fillStyle = idx % 2 === 0 ? '#fbfdff' : '#f2f6fb';
+                ctx.fillRect(55, y - 25, 1688, 34);
+                const logs = s.errorLog || [];
+                const count = logs.length || (s.mistakes ? s.mistakes.length : 0);
+                const top = topErrorForStudent(s);
+                ctx.fillStyle = '#0f1e46'; ctx.font = '700 16px Arial';
+                ctx.fillText(String(idx + 1), cols[0], y);
+                ctx.fillText(s.name, cols[1], y);
+                ctx.fillText(String(grade), cols[2], y);
+                ctx.fillStyle = count >= 8 ? '#ef4444' : count >= 4 ? '#f59e0b' : '#16a34a';
+                ctx.font = '800 16px Arial'; ctx.fillText(String(count), cols[3], y);
+                ctx.fillStyle = '#0f1e46'; ctx.font = '700 15px Arial'; drawWrappedText(ctx, top, cols[4], y, 310, 17, 1);
+                ctx.fillStyle = '#29405f'; ctx.font = '500 15px Arial'; drawWrappedText(ctx, recommendationForError(top), cols[5], y, 580, 17, 1);
+            });
+
+            ctx.fillStyle = '#eaf1fb'; roundRect(ctx, 36, canvas.height - 55, 1728, 35, 10, true, false);
+            ctx.fillStyle = '#0f1e46'; ctx.font = '700 17px Arial'; ctx.fillText('Not: Rapor, oyun içi cevaplar ve hata etiketleme sistemi üzerinden otomatik oluşturulur. Kırmızı alanlar öncelikli tekrar gerektirir.', 70, canvas.height - 31);
+            downloadCanvas(canvas, `gramergo_hata_analiz_raporu_${titleScope.replace(/\s+/g, '_').replace(/[^\wğüşöçıİĞÜŞÖÇ_\.\-]/gi, '')}.png`);
+        }
+
+        function downloadClassCSV() {
+            const grade = isTeacherMode ? teacherFilteredGrade : activeGrade;
+            const students = isTeacherMode ? dynamicMEBDatabase[grade].students : (currentUser ? [currentUser] : []);
+            if (!students.length) { alert('Aktarılacak veri bulunamadı.'); return; }
+            const rows = [['Öğrenci', 'Sınıf', 'Ustalık', 'Hata Kaydı', 'En Sık Hata', 'Öneri']];
+            students.forEach(s => {
+                const top = topErrorForStudent(s);
+                rows.push([s.name, grade, getStudentAverage(s), (s.errorLog || []).length, top, recommendationForError(top)]);
+            });
+            const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gramergo_sinif_hata_analizi_${grade}_sinif.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
         }
 
         function shuffleArray(array) {
